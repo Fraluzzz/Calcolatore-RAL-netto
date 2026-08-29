@@ -2,10 +2,15 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Da RAL a netto — calcolatore retribuzione</title>
 <meta name="description" content="Calcolatore che scompone una retribuzione annua lorda in tutte le voci trattenute e restituisce il netto annuale e mensile.">
 <meta name="theme-color" content="#E9EAE5">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="NetPay">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,11 +26,7 @@
 
     /* le trattenute condividono una scala neutra: sono tutte "uscite",
        si distinguono per peso visivo, non per giudizio. */
-    --d1:#1F2226;
-    --d2:#3C434C;
-    --d3:#5C6570;
-    --d4:#7F8894;
-    --d5:#A5ADB6;
+    --d1:#1F2226; --d2:#3C434C; --d3:#5C6570; --d4:#7F8894; --d5:#A5ADB6;
 
     /* il netto è l'unico colore saturo della pagina. */
     --net:#1B3EF5;
@@ -33,6 +34,7 @@
 
     --r:4px;
     --ease:cubic-bezier(.22,1,.36,1);
+    --pad:clamp(16px,5vw,40px);
   }
 
   *{box-sizing:border-box;margin:0;padding:0}
@@ -43,150 +45,150 @@
   }
 
   body{
-    background:var(--bg);
-    color:var(--ink);
+    background:var(--bg);color:var(--ink);
     font-family:'Instrument Sans',system-ui,sans-serif;
-    font-size:15px;line-height:1.55;
-    -webkit-font-smoothing:antialiased;
+    font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
 
-  .wrap{max-width:1080px;margin:0 auto;
-    padding:clamp(24px,5vw,72px) clamp(18px,5vw,40px) 96px;}
-
-  .skip{
-    position:absolute;left:-9999px;
-    background:var(--ink);color:#fff;padding:10px 16px;border-radius:var(--r);z-index:10;
+  .wrap{
+    max-width:1200px;margin:0 auto;
+    padding:clamp(20px,4vw,56px) var(--pad) 88px;
+    padding-left:max(var(--pad),env(safe-area-inset-left));
+    padding-right:max(var(--pad),env(safe-area-inset-right));
   }
+
+  .skip{position:absolute;left:-9999px;background:var(--ink);color:#fff;
+    padding:10px 16px;border-radius:var(--r);z-index:10}
   .skip:focus{left:16px;top:16px}
 
-  /* ══ intestazione ══ */
+  /* ══ copertina ══ */
   .masthead{
-    display:flex;justify-content:space-between;align-items:flex-start;
-    gap:24px;padding-bottom:16px;border-bottom:1px solid var(--ink-18);flex-wrap:wrap;
+    display:flex;justify-content:space-between;align-items:center;
+    gap:20px;padding-bottom:18px;border-bottom:1px solid var(--ink-18);
   }
   .tag{
     font-family:'IBM Plex Mono',monospace;font-size:11px;
-    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-48);
+    flex:0 1 auto;
   }
+  .tag:last-child{text-align:right;flex:0 0 auto}
 
   h1{
     font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 112;
-    font-weight:800;font-size:clamp(42px,9vw,96px);
-    line-height:.9;letter-spacing:-.035em;margin:36px 0 22px;
+    font-weight:800;font-size:clamp(34px,8.5vw,88px);
+    line-height:.92;letter-spacing:-.035em;margin:clamp(26px,5vw,40px) 0 18px;
   }
   h1 .b{color:var(--net)}
-  .lede{max-width:50ch;font-size:17px;color:var(--ink-72)}
+  .lede{max-width:52ch;font-size:clamp(15px,3.6vw,17px);color:var(--ink-72)}
+
+  /* ══ impianto a due colonne su schermi larghi ══
+     il modulo resta ancorato mentre i risultati scorrono: si muove
+     il cursore e si vede l'effetto senza perdere di vista i comandi. */
+  .layout{margin-top:clamp(28px,4vw,44px);display:grid;gap:clamp(20px,3vw,36px)}
+  @media (min-width:1000px){
+    .layout{grid-template-columns:minmax(340px,400px) 1fr;align-items:start}
+    .col-form{position:sticky;top:24px}
+  }
 
   /* ══ modulo ══ */
-  .form{
-    margin-top:44px;background:var(--surface);
-    border:1px solid var(--ink-18);border-radius:var(--r);
-  }
-  .form-main{padding:clamp(22px,4vw,34px)}
+  .form{background:var(--surface);border:1px solid var(--ink-18);border-radius:var(--r)}
+  .form-main{padding:clamp(20px,4vw,30px)}
 
   .lbl{
     display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
-    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);margin-bottom:12px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);margin-bottom:10px;
   }
 
-  .ral-row{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
-  .ral-box{position:relative;flex:0 0 auto}
+  .ral-row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+  .ral-box{position:relative;flex:1 1 180px;min-width:0}
   .ral-box .cur{
     position:absolute;left:0;top:50%;transform:translateY(-50%);
-    font-family:'Archivo',sans-serif;font-weight:400;
-    font-size:clamp(30px,6vw,44px);color:var(--ink-48);pointer-events:none;
+    font-family:'Archivo',sans-serif;font-size:clamp(26px,6vw,40px);
+    color:var(--ink-48);pointer-events:none;
   }
   #ral{
-    width:clamp(190px,42vw,280px);
-    font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 108;
-    font-weight:700;font-size:clamp(34px,7vw,52px);letter-spacing:-.02em;
+    width:100%;font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 106;
+    font-weight:700;font-size:clamp(30px,7vw,46px);letter-spacing:-.02em;
     color:var(--ink);background:transparent;
     border:none;border-bottom:2px solid var(--ink);border-radius:0;
-    padding:2px 0 6px 34px;-moz-appearance:textfield;
+    padding:2px 0 6px 30px;-moz-appearance:textfield;
   }
   #ral::-webkit-outer-spin-button,#ral::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   #ral[aria-invalid=true]{border-bottom-color:var(--warn);color:var(--warn)}
-  .ral-unit{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;
-    color:var(--ink-48);padding-bottom:12px;
-  }
+  .ral-unit{font-family:'IBM Plex Mono',monospace;font-size:12px;
+    color:var(--ink-48);padding-bottom:10px;flex:0 0 auto}
 
-  .slider-wrap{margin-top:26px}
+  .slider-wrap{margin-top:22px}
   input[type=range]{
-    -webkit-appearance:none;appearance:none;
-    width:100%;height:24px;background:transparent;cursor:pointer;
+    -webkit-appearance:none;appearance:none;width:100%;
+    height:28px;background:transparent;cursor:pointer;touch-action:pan-y;
   }
   input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--ink-18);border-radius:2px}
   input[type=range]::-moz-range-track{height:2px;background:var(--ink-18);border-radius:2px}
   input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:18px;height:18px;margin-top:-8px;
+    -webkit-appearance:none;width:20px;height:20px;margin-top:-9px;
     background:var(--ink);border:none;border-radius:50%;
   }
-  input[type=range]::-moz-range-thumb{
-    width:18px;height:18px;border:none;border-radius:50%;background:var(--ink);
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border:none;border-radius:50%;background:var(--ink)}
+  /* dito invece di mouse: bersaglio più generoso */
+  @media (pointer:coarse){
+    input[type=range]::-webkit-slider-thumb{width:26px;height:26px;margin-top:-12px}
+    input[type=range]::-moz-range-thumb{width:26px;height:26px}
   }
-  .ticks{
-    display:flex;justify-content:space-between;
-    font-family:'IBM Plex Mono',monospace;font-size:10px;
-    color:var(--ink-48);margin-top:2px;
-  }
-  .oltre{
-    display:none;margin-top:8px;
-    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48);
-  }
+  .ticks{display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-48);margin-top:2px}
+  .oltre{display:none;margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48)}
   .oltre.on{display:block}
 
-  .seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:32px}
+  .seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px}
   .seg{display:flex;border:1px solid var(--ink-18);border-radius:var(--r);overflow:hidden}
   .seg button{
     flex:1;font-family:'IBM Plex Mono',monospace;font-size:13px;
     color:var(--ink-72);background:var(--surface);
     border:none;border-right:1px solid var(--ink-18);
-    padding:13px 6px;cursor:pointer;transition:background .15s,color .15s;
+    padding:14px 4px;min-height:46px;cursor:pointer;
+    transition:background .15s,color .15s;
   }
   .seg button:last-child{border-right:none}
-  .seg button:hover{background:var(--bg)}
+  @media (hover:hover){ .seg button:hover{background:var(--bg)} }
   .seg button[aria-pressed=true]{background:var(--ink);color:#fff}
 
   .adv{border-top:1px solid var(--ink-09)}
   .adv > summary{
-    padding:16px clamp(22px,4vw,34px);cursor:pointer;list-style:none;
+    padding:15px clamp(20px,4vw,30px);cursor:pointer;list-style:none;
     font-family:'IBM Plex Mono',monospace;font-size:11px;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-72);
+    letter-spacing:.13em;text-transform:uppercase;color:var(--ink-72);
     display:flex;justify-content:space-between;align-items:center;gap:12px;
   }
   .adv > summary::-webkit-details-marker{display:none}
   .adv > summary .chev{color:var(--net);font-size:15px}
   .adv[open] > summary .chev{transform:rotate(45deg);display:inline-block}
-  .adv-note{
-    padding:0 clamp(22px,4vw,34px) 4px;
-    font-size:13px;color:var(--ink-48);max-width:64ch;
-  }
-  .adv-body{
-    padding:16px clamp(22px,4vw,34px) 28px;
-    display:grid;grid-template-columns:1fr 1fr;gap:28px;
-  }
-  .check{display:flex;gap:11px;align-items:flex-start;cursor:pointer}
+  .adv-note{padding:0 clamp(20px,4vw,30px) 4px;font-size:13px;color:var(--ink-48)}
+  .adv-body{padding:14px clamp(20px,4vw,30px) 24px;display:grid;gap:22px}
+  .check{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
+    padding:4px 0;min-height:34px}
   .check input{
     appearance:none;-webkit-appearance:none;
-    width:19px;height:19px;flex:0 0 19px;margin-top:2px;
+    width:20px;height:20px;flex:0 0 20px;margin-top:2px;
     border:1.5px solid var(--ink-18);border-radius:3px;
     background:var(--surface);cursor:pointer;position:relative;
   }
   .check input:checked{background:var(--net);border-color:var(--net)}
   .check input:checked::after{
-    content:"";position:absolute;left:5.5px;top:1.5px;
-    width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg);
+    content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg);
   }
   .check .txt strong{display:block;font-weight:600;font-size:14px}
   .check .txt span{font-size:13px;color:var(--ink-48);line-height:1.45}
-  .sub-opt{margin:14px 0 0 30px;display:none}
+  .sub-opt{margin:12px 0 0 31px;display:none}
   .sub-opt.on{display:block}
   .num-in{
-    width:100%;font-family:'IBM Plex Mono',monospace;font-size:15px;
+    width:100%;font-family:'IBM Plex Mono',monospace;font-size:16px;
     color:var(--ink);background:var(--bg);
     border:1px solid var(--ink-18);border-radius:var(--r);
-    padding:11px 13px;-moz-appearance:textfield;
+    padding:12px 13px;-moz-appearance:textfield;
   }
   .num-in::-webkit-outer-spin-button,.num-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .hint{font-size:12px;color:var(--ink-48);margin-top:7px}
@@ -194,150 +196,140 @@
   .go{
     width:100%;font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 108;
     font-weight:700;font-size:17px;letter-spacing:-.01em;
-    color:#fff;background:var(--ink);
-    border:none;border-radius:0 0 3px 3px;
-    padding:19px;cursor:pointer;transition:background .18s var(--ease);
+    color:#fff;background:var(--ink);border:none;border-radius:0 0 3px 3px;
+    padding:18px;min-height:56px;cursor:pointer;transition:background .18s var(--ease);
   }
-  .go:hover{background:var(--net)}
+  @media (hover:hover){ .go:hover{background:var(--net)} }
+  .go:active{background:var(--net)}
 
   :focus-visible{outline:2px solid var(--net);outline-offset:2px}
 
-  .err{display:none;padding:0 clamp(22px,4vw,34px) 18px;font-size:14px;color:var(--warn)}
+  .err{display:none;padding:0 clamp(20px,4vw,30px) 16px;font-size:14px;color:var(--warn)}
   .err.on{display:block}
+
+  /* ══ stato vuoto ══ */
+  .empty{
+    border:1px dashed var(--ink-18);border-radius:var(--r);
+    padding:clamp(28px,6vw,48px) clamp(20px,4vw,32px);
+    text-align:center;color:var(--ink-48);
+  }
+  .empty strong{display:block;font-family:'Archivo',sans-serif;font-weight:700;
+    font-size:19px;color:var(--ink-72);margin-bottom:6px;letter-spacing:-.01em}
+  .empty span{font-size:14px}
+  @media (max-width:999px){ .empty{display:none} }
 
   /* ══ risultato ══ */
   #out[hidden]{display:none}
 
   h2{
     font-family:'IBM Plex Mono',monospace;font-size:11px;
-    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);margin-bottom:18px;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--ink-48);margin-bottom:16px;
   }
-  .h2-gap{margin-top:56px}
+  .h2-gap{margin-top:clamp(32px,5vw,48px)}
 
   .hero{
-    margin-top:56px;background:var(--ink);color:#fff;border-radius:var(--r);
-    padding:clamp(26px,5vw,44px);
-    display:grid;grid-template-columns:1.2fr 1fr;gap:36px;align-items:end;
+    background:var(--ink);color:#fff;border-radius:var(--r);
+    padding:clamp(22px,5vw,38px);
+    display:grid;grid-template-columns:1.15fr 1fr;gap:32px;align-items:end;
   }
-  .hero .k{
-    font-family:'IBM Plex Mono',monospace;font-size:10px;
-    letter-spacing:.16em;text-transform:uppercase;
-    color:rgba(255,255,255,.5);margin-bottom:10px;
-  }
+  .hero .k{font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:9px}
   .hero .big{
-    font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 115;
-    font-weight:800;font-size:clamp(46px,10vw,86px);
-    line-height:.86;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+    font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 114;
+    font-weight:800;font-size:clamp(40px,9.5vw,76px);
+    line-height:.88;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
   }
-  .hero .cadence{margin-top:12px;font-size:14px;color:rgba(255,255,255,.6)}
-  .hero .year{
-    font-family:'Archivo',sans-serif;font-weight:700;
-    font-size:clamp(24px,4vw,34px);letter-spacing:-.02em;font-variant-numeric:tabular-nums;
-  }
-  .rates{
-    display:flex;gap:26px;margin-top:22px;
-    padding-top:20px;border-top:1px solid rgba(255,255,255,.16);
-  }
-  .rates div{flex:1}
-  .rates .v{font-family:'IBM Plex Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums}
-  .rates .n{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;line-height:1.3}
+  .hero .cadence{margin-top:11px;font-size:13px;color:rgba(255,255,255,.6);max-width:34ch}
+  .hero .year{font-family:'Archivo',sans-serif;font-weight:700;
+    font-size:clamp(23px,5vw,32px);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .rates{display:flex;gap:clamp(12px,3vw,24px);margin-top:20px;
+    padding-top:18px;border-top:1px solid rgba(255,255,255,.16)}
+  .rates div{flex:1;min-width:0}
+  .rates .v{font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(15px,3.8vw,19px);font-variant-numeric:tabular-nums}
+  .rates .n{font-size:clamp(10px,2.5vw,11px);color:rgba(255,255,255,.5);
+    margin-top:2px;line-height:1.25}
 
   /* ══ la colonna: elemento firma ══
-     ogni banda è alta in proporzione alla sua quota di RAL. la riga
-     È il segmento, così non c'è una legenda da incrociare col grafico. */
+     ogni banda è alta in proporzione alla sua quota di RAL.
+     la riga È il segmento, così non c'è legenda da incrociare. */
   .stack{display:flex;flex-direction:column;gap:2px}
   .band{
     display:flex;align-items:center;justify-content:space-between;
-    gap:18px;padding:0 clamp(14px,3vw,26px);
+    gap:12px;padding:0 clamp(13px,3vw,24px);
     color:#fff;border-radius:2px;overflow:hidden;
     transition:height .5s var(--ease);
   }
-  .band .l{min-width:0}
-  .band .t{
-    display:block;font-weight:600;font-size:clamp(13px,2.6vw,15px);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
-  .band .s{
-    display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;
-    opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  }
+  .band .l{min-width:0;flex:1 1 auto}
+  .band .t{display:block;font-weight:600;font-size:clamp(13px,3.2vw,15px);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .band .s{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .band .r{text-align:right;flex:0 0 auto}
-  .band .a{
-    display:block;font-family:'IBM Plex Mono',monospace;
-    font-size:clamp(14px,3vw,16px);font-variant-numeric:tabular-nums;white-space:nowrap;
-  }
-  .band .pc{
-    display:block;font-family:'IBM Plex Mono',monospace;
-    font-size:11px;opacity:.62;
-  }
-  .band.net .t{font-size:clamp(15px,3vw,17px)}
-  .band.net .a{font-size:clamp(20px,4.5vw,26px);font-weight:600}
-  /* segnala le bande portate all'altezza minima: senza questo la
-     didascalia prometterebbe una proporzionalità che non c'è. */
+  .band .a{display:block;font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(14px,3.4vw,16px);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .band .pc{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.62}
+  .band.net .t{font-size:clamp(15px,3.6vw,17px)}
+  .band.net .a{font-size:clamp(19px,4.8vw,26px);font-weight:600}
+  /* segnala le bande portate al minimo: senza questo la didascalia
+     prometterebbe una proporzionalità che lì non c'è. */
   .band.floor{border-left:3px solid rgba(255,255,255,.42)}
 
-  .stack-cap{
-    display:flex;justify-content:space-between;gap:16px;
-    font-family:'IBM Plex Mono',monospace;font-size:11px;
-    color:var(--ink-48);margin-top:10px;
-  }
+  .stack-cap{display:flex;justify-content:space-between;gap:14px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48);margin-top:10px}
 
   /* ══ dettaglio ══ */
-  details.detail{
-    margin-top:44px;background:var(--surface);
-    border:1px solid var(--ink-18);border-radius:var(--r);
-  }
+  details.detail{margin-top:clamp(28px,4vw,40px);background:var(--surface);
+    border:1px solid var(--ink-18);border-radius:var(--r)}
   details.detail > summary{
-    padding:17px clamp(20px,4vw,28px);cursor:pointer;list-style:none;
+    padding:16px clamp(18px,4vw,26px);cursor:pointer;list-style:none;
     font-family:'IBM Plex Mono',monospace;font-size:11px;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-72);
+    letter-spacing:.13em;text-transform:uppercase;color:var(--ink-72);
     display:flex;justify-content:space-between;align-items:center;gap:12px;
   }
   details.detail > summary::-webkit-details-marker{display:none}
   details.detail > summary .chev{color:var(--net);font-size:15px}
   details.detail[open] > summary .chev{transform:rotate(45deg);display:inline-block}
-  .dbody{padding:4px clamp(20px,4vw,28px) 30px;border-top:1px solid var(--ink-09)}
-  .dbody h3{
-    font-family:'IBM Plex Mono',monospace;font-size:10px;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-48);margin:26px 0 6px;
-  }
-  .dbody table{
-    width:100%;border-collapse:collapse;
-    font-family:'IBM Plex Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;
-  }
-  .dbody td{padding:7px 0;border-bottom:1px solid var(--ink-09);vertical-align:top}
-  .dbody td:last-child{text-align:right;white-space:nowrap;padding-left:16px}
+  .dbody{padding:4px clamp(18px,4vw,26px) 26px;border-top:1px solid var(--ink-09)}
+  .dbody h3{font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:.13em;text-transform:uppercase;color:var(--ink-48);margin:24px 0 6px}
+  .dbody table{width:100%;border-collapse:collapse;table-layout:fixed;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(11.5px,2.9vw,13px);font-variant-numeric:tabular-nums}
+  .dbody td{padding:7px 0;border-bottom:1px solid var(--ink-09);
+    vertical-align:top;overflow-wrap:anywhere}
+  .dbody td:last-child{text-align:right;white-space:nowrap;
+    padding-left:10px;width:38%;overflow-wrap:normal}
   .dbody tr:last-child td{border-bottom:none}
   .dbody tr.tot td{font-weight:600;border-top:1px solid var(--ink);border-bottom:none}
   .dbody tr.neg td:last-child{color:var(--ink-72)}
 
   /* ══ ipotesi ══ */
-  .notes{margin-top:72px;padding-top:34px;border-top:1px solid var(--ink-18)}
-  .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px}
-  .notes ul{list-style:none;display:grid;gap:13px}
+  .notes{margin-top:clamp(48px,8vw,72px);padding-top:32px;border-top:1px solid var(--ink-18)}
+  .notes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:30px}
+  .notes ul{list-style:none;display:grid;gap:12px}
   .notes li{font-size:14px;color:var(--ink-72);padding-left:19px;position:relative}
-  .notes li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:1px;background:var(--net)}
+  .notes li::before{content:"";position:absolute;left:0;top:9px;
+    width:9px;height:1px;background:var(--net)}
   .notes b{color:var(--ink);font-weight:600}
-  .src{
-    margin-top:34px;padding-top:22px;border-top:1px solid var(--ink-09);
-    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48);line-height:2;
-  }
+  .src{margin-top:30px;padding-top:20px;border-top:1px solid var(--ink-09);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    color:var(--ink-48);line-height:1.95;overflow-wrap:anywhere}
   .src a{color:var(--ink-72)}
 
-  @media (max-width:820px){
-    .hero{grid-template-columns:1fr;gap:28px}
-    .seg-grid,.adv-body,.notes-grid{grid-template-columns:1fr;gap:24px}
+  @media (max-width:760px){
+    .hero{grid-template-columns:1fr;gap:24px}
   }
-  @media (max-width:460px){
+  @media (max-width:420px){
     .band .s{display:none}
-    .band .pc{display:none}
-    .rates{flex-direction:column;gap:14px}
-    .stack-cap{flex-direction:column;gap:4px}
+    .stack-cap{flex-direction:column;gap:3px}
+    .tag{font-size:10px;letter-spacing:.1em}
   }
 
   @media print{
     body{background:#fff}
-    .form,.slider-wrap,.skip{display:none}
+    .form,.slider-wrap,.skip,.empty{display:none}
+    .layout{display:block}
     .hero{background:#fff;color:#000;border:1px solid #000}
     .hero .k,.hero .cadence,.rates .n{color:#444}
     details.detail{border:none}
@@ -352,15 +344,17 @@
 
   <header class="masthead">
     <p class="tag">Calcolatore retribuzione netta</p>
-    <p class="tag" id="stamp">Anno d'imposta 2026 · Milano</p>
+    <p class="tag" id="stamp">2026 · Milano</p>
   </header>
 
   <h1>Dove finisce<br>la tua <span class="b">RAL</span>.</h1>
   <p class="lede">Inserisci la retribuzione annua lorda. Il calcolatore scompone ogni voce trattenuta sul lordo e restituisce il netto annuale e mensile.</p>
 
-<main id="main">
+<main class="layout" id="main">
+
   <!-- ══════════ input ══════════ -->
-  <div class="form">
+  <div class="col-form">
+   <div class="form">
     <div class="form-main">
 
       <label class="lbl" for="ral">Retribuzione annua lorda</label>
@@ -368,7 +362,7 @@
         <div class="ral-box">
           <span class="cur" aria-hidden="true">€</span>
           <input type="number" id="ral" value="35000" min="1" max="1000000" step="500"
-                 inputmode="numeric" aria-describedby="err">
+                 inputmode="numeric" enterkeyhint="done" aria-describedby="err">
         </div>
         <span class="ral-unit">lordi / anno</span>
       </div>
@@ -403,7 +397,7 @@
 
     <details class="adv">
       <summary>Agevolazioni e versamenti volontari <span class="chev" aria-hidden="true">+</span></summary>
-      <p class="adv-note">Il caso standard non prevede agevolazioni. Queste opzioni restano spente salvo tua scelta esplicita, e portano il calcolo fuori dal caso base.</p>
+      <p class="adv-note">Il caso standard non prevede agevolazioni. Queste opzioni restano spente salvo scelta esplicita, e portano il calcolo fuori dal caso base.</p>
       <div class="adv-body">
 
         <div>
@@ -437,48 +431,48 @@
 
     <p class="err" id="err" role="alert"></p>
     <button class="go" id="go">Calcola il netto</button>
+   </div>
   </div>
 
   <!-- ══════════ output ══════════ -->
-  <div id="out" hidden aria-live="polite">
+  <div class="col-out">
 
-    <div class="hero">
-      <div>
-        <p class="k" id="heroK">Netto mensile</p>
-        <p class="big" id="heroV">—</p>
-        <p class="cadence" id="heroC"></p>
-      </div>
-      <div>
-        <p class="k">Netto annuale</p>
-        <p class="year" id="heroY">—</p>
-        <div class="rates">
-          <div>
-            <p class="v" id="rEff">—</p>
-            <p class="n">Prelievo<br>effettivo</p>
-          </div>
-          <div>
-            <p class="v" id="rMarg">—</p>
-            <p class="n">Aliquota<br>marginale</p>
-          </div>
-          <div>
-            <p class="v" id="rTot">—</p>
-            <p class="n">Totale<br>trattenute</p>
+    <div class="empty" id="empty">
+      <strong>Il risultato compare qui</strong>
+      <span>Imposta la RAL e premi «Calcola il netto».</span>
+    </div>
+
+    <div id="out" hidden aria-live="polite">
+
+      <div class="hero">
+        <div>
+          <p class="k" id="heroK">Netto mensile</p>
+          <p class="big" id="heroV">—</p>
+          <p class="cadence" id="heroC"></p>
+        </div>
+        <div>
+          <p class="k">Netto annuale</p>
+          <p class="year" id="heroY">—</p>
+          <div class="rates">
+            <div><p class="v" id="rEff">—</p><p class="n">Prelievo<br>effettivo</p></div>
+            <div><p class="v" id="rMarg">—</p><p class="n">Aliquota<br>marginale</p></div>
+            <div><p class="v" id="rTot">—</p><p class="n">Totale<br>trattenute</p></div>
           </div>
         </div>
       </div>
-    </div>
 
-    <h2 class="h2-gap">Composizione del lordo</h2>
-    <div class="stack" id="stack"></div>
-    <div class="stack-cap">
-      <span id="capNota">Altezza proporzionale alla quota di RAL</span>
-      <span id="capRal"></span>
-    </div>
+      <h2 class="h2-gap">Composizione del lordo</h2>
+      <div class="stack" id="stack"></div>
+      <div class="stack-cap">
+        <span id="capNota">Altezza proporzionale alla quota di RAL</span>
+        <span id="capRal"></span>
+      </div>
 
-    <details class="detail">
-      <summary>Dettaglio del calcolo, voce per voce <span class="chev" aria-hidden="true">+</span></summary>
-      <div class="dbody" id="detail"></div>
-    </details>
+      <details class="detail">
+        <summary>Dettaglio del calcolo, voce per voce <span class="chev" aria-hidden="true">+</span></summary>
+        <div class="dbody" id="detail"></div>
+      </details>
+    </div>
   </div>
 </main>
 
@@ -547,7 +541,6 @@ const P = {
   // Tetto di deducibilità del versamento a fondo pensione.
   PREV_MAX: 5164.57,
 
-  // Limiti di input accettati.
   RAL_MAX: 1000000
 };
 
@@ -614,8 +607,7 @@ function cuneo(reddito){
 
 /**
  * Regime impatriati: solo una quota del reddito concorre
- * all'imponibile, entro il tetto di 600.000 €. L'eccedenza
- * è tassata per intero.
+ * all'imponibile, entro il tetto di 600.000 €.
  */
 function abbattiImpatriati(reddito, conFigli){
   const q = conFigli ? P.IMPATRIATI.quotaConFigli : P.IMPATRIATI.quota;
@@ -628,9 +620,9 @@ function abbattiImpatriati(reddito, conFigli){
 function calcola(ral, anno, opt){
   opt = opt || {};
 
-  // 1. Contributi previdenziali obbligatori a carico del lavoratore.
-  //    Si calcolano sempre sulla RAL piena: le agevolazioni fiscali
-  //    non toccano la base contributiva.
+  // 1. Contributi obbligatori a carico del lavoratore. Si calcolano
+  //    sempre sulla RAL piena: le agevolazioni fiscali non toccano
+  //    la base contributiva.
   const contributi = ral * P.INPS;
 
   // 2. Versamento volontario a fondo pensione: deducibile entro il
@@ -660,8 +652,8 @@ function calcola(ral, anno, opt){
   //    si perdono, l'incapienza non genera rimborso in questo modello.
   const irpefNetta = Math.max(0, irpef.totale - detr.totale - detrCuneo);
 
-  // 8. Addizionali locali: si calcolano sull'imponibile,
-  //    non sull'IRPEF, e non risentono delle detrazioni.
+  // 8. Addizionali locali: sull'imponibile, non sull'IRPEF,
+  //    e non risentono delle detrazioni.
   const reg = perScaglioni(imponibile, P.REG);
   const com = imponibile > P.COM.esenteFinoA ? imponibile * P.COM.al : 0;
 
@@ -696,8 +688,8 @@ const pc2  = n => (n*100).toLocaleString('it-IT',{maximumFractionDigits:2})+'%';
 const motoRidotto = matchMedia('(prefers-reduced-motion: reduce)');
 
 /* Un solo ciclo di animazione alla volta: senza questo, trascinando
-   lo slider si accumulano decine di loop concorrenti sullo stesso
-   elemento e il numero sfarfalla. */
+   lo slider si accumulano loop concorrenti sullo stesso elemento
+   e il numero sfarfalla. */
 let frameId = null;
 function conta(el, da, a, fmt){
   if(frameId !== null){ cancelAnimationFrame(frameId); frameId = null; }
@@ -751,11 +743,13 @@ function render(r, mensilita){
 
   voci.push({c:'var(--net)', t:'Netto annuale', s:'', v:r.netto, net:true});
 
-  // altezza scalata al viewport, così la codifica proporzionale
-  // sopravvive anche su schermi stretti invece di essere disattivata.
-  const stretto = window.innerWidth < 560;
-  const H   = stretto ? 300 : 430;
-  const MIN = stretto ? 46  : 56;
+  /* l'altezza si scala sulla larghezza disponibile invece di essere
+     disattivata su schermi stretti: la codifica proporzionale
+     sopravvive anche sul telefono. */
+  const largh = document.getElementById('stack').clientWidth || window.innerWidth;
+  const stretto = largh < 480;
+  const H   = stretto ? 310 : 440;
+  const MIN = stretto ? 48  : 58;
   let tagliate = 0;
 
   document.getElementById('stack').innerHTML = voci.map(function(v){
@@ -772,7 +766,7 @@ function render(r, mensilita){
   }).join('');
 
   document.getElementById('capNota').textContent = tagliate > 0
-    ? 'Altezza proporzionale alla quota di RAL; le bande marcate a sinistra sono al minimo leggibile'
+    ? 'Altezza proporzionale; le bande marcate a sinistra sono al minimo leggibile'
     : 'Altezza proporzionale alla quota di RAL';
   document.getElementById('capRal').textContent = 'RAL ' + eur(r.ral) + ' = 100%';
 
@@ -844,6 +838,7 @@ function render(r, mensilita){
     + '</table>';
 
   document.getElementById('out').hidden = false;
+  document.getElementById('empty').hidden = true;
 }
 
 
@@ -853,17 +848,16 @@ function render(r, mensilita){
 
 const $ = id => document.getElementById(id);
 const visibile = () => !$('out').hidden;
-
 const valSeg = id => $(id).querySelector('[aria-pressed=true]').dataset.v;
 
-/** Valida la RAL e restituisce il numero, oppure null con messaggio. */
+/** Valida la RAL e restituisce il numero, oppure un messaggio d'errore. */
 function leggiRal(){
   const grezzo = $('ral').value.trim();
-  if(grezzo === '')            return {err:'Inserisci una retribuzione annua lorda.'};
+  if(grezzo === '')       return {err:'Inserisci una retribuzione annua lorda.'};
   const v = Number(grezzo);
-  if(!Number.isFinite(v))      return {err:'Il valore inserito non è un numero.'};
-  if(v <= 0)                   return {err:'La RAL deve essere maggiore di zero.'};
-  if(v > P.RAL_MAX)            return {err:'Valore massimo accettato: ' + eur(P.RAL_MAX) + '.'};
+  if(!Number.isFinite(v)) return {err:'Il valore inserito non è un numero.'};
+  if(v <= 0)              return {err:'La RAL deve essere maggiore di zero.'};
+  if(v > P.RAL_MAX)       return {err:'Valore massimo accettato: ' + eur(P.RAL_MAX) + '.'};
   return {v};
 }
 
@@ -883,7 +877,12 @@ function sincronizzaSlider(v){
 
 function esegui(){
   const {v, err} = leggiRal();
-  if(err){ mostraErrore(err); $('out').hidden = true; return; }
+  if(err){
+    mostraErrore(err);
+    $('out').hidden = true;
+    $('empty').hidden = false;
+    return;
+  }
   mostraErrore(null);
   sincronizzaSlider(v);
   render(
@@ -898,7 +897,7 @@ function esegui(){
 
 /* Dopo il primo calcolo ogni modifica aggiorna subito il risultato:
    ripremere il pulsante per vedere l'effetto di uno slider sarebbe
-   punitivo. Prima del primo calcolo, invece, non si mostra nulla. */
+   punitivo. Prima del primo calcolo non si mostra nulla. */
 const seVisibile = () => { if(visibile()) esegui(); };
 
 ['segMens','segAnno'].forEach(id => {
@@ -907,7 +906,7 @@ const seVisibile = () => { if(visibile()) esegui(); };
     if(!b) return;
     $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed','false'));
     b.setAttribute('aria-pressed','true');
-    $('stamp').textContent = "Anno d'imposta " + valSeg('segAnno') + ' · Milano';
+    $('stamp').textContent = valSeg('segAnno') + ' · Milano';
     seVisibile();
   });
 });
@@ -925,7 +924,9 @@ $('ral').addEventListener('input', () => {
   if(v !== undefined) sincronizzaSlider(v);
   seVisibile();
 });
-$('ral').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); esegui(); } });
+$('ral').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); $('ral').blur(); esegui(); }
+});
 
 $('imp').addEventListener('change', () => {
   $('impSub').classList.toggle('on', $('imp').checked);
@@ -934,8 +935,8 @@ $('imp').addEventListener('change', () => {
 });
 ['impFigli','prev'].forEach(id => $(id).addEventListener('input', seVisibile));
 
-// ridisegna le bande quando cambia la larghezza: le altezze
-// dipendono dal viewport.
+// le altezze delle bande dipendono dalla larghezza: ridisegna al resize
+// e alla rotazione del telefono.
 let resizeId;
 addEventListener('resize', () => {
   clearTimeout(resizeId);
