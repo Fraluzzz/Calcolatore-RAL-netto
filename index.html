@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Da RAL a netto — calcolatore retribuzione</title>
+<meta name="description" content="Calcolatore che scompone una retribuzione annua lorda in tutte le voci trattenute e restituisce il netto annuale e mensile.">
+<meta name="theme-color" content="#E9EAE5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#E9EAE5;
+    --surface:#FFFFFF;
+    --ink:#16191A;
+    --ink-72:rgba(22,25,26,.72);
+    --ink-48:rgba(22,25,26,.48);
+    --ink-18:rgba(22,25,26,.18);
+    --ink-09:rgba(22,25,26,.09);
+
+    /* le trattenute condividono una scala neutra: sono tutte "uscite",
+       si distinguono per peso visivo, non per giudizio. */
+    --d1:#1F2226;
+    --d2:#3C434C;
+    --d3:#5C6570;
+    --d4:#7F8894;
+    --d5:#A5ADB6;
+
+    /* il netto è l'unico colore saturo della pagina. */
+    --net:#1B3EF5;
+    --warn:#B3261E;
+
+    --r:4px;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Instrument Sans',system-ui,sans-serif;
+    font-size:15px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{max-width:1080px;margin:0 auto;
+    padding:clamp(24px,5vw,72px) clamp(18px,5vw,40px) 96px;}
+
+  .skip{
+    position:absolute;left:-9999px;
+    background:var(--ink);color:#fff;padding:10px 16px;border-radius:var(--r);z-index:10;
+  }
+  .skip:focus{left:16px;top:16px}
+
+  /* ══ intestazione ══ */
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:24px;padding-bottom:16px;border-bottom:1px solid var(--ink-18);flex-wrap:wrap;
+  }
+  .tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);
+  }
+
+  h1{
+    font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 112;
+    font-weight:800;font-size:clamp(42px,9vw,96px);
+    line-height:.9;letter-spacing:-.035em;margin:36px 0 22px;
+  }
+  h1 .b{color:var(--net)}
+  .lede{max-width:50ch;font-size:17px;color:var(--ink-72)}
+
+  /* ══ modulo ══ */
+  .form{
+    margin-top:44px;background:var(--surface);
+    border:1px solid var(--ink-18);border-radius:var(--r);
+  }
+  .form-main{padding:clamp(22px,4vw,34px)}
+
+  .lbl{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);margin-bottom:12px;
+  }
+
+  .ral-row{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+  .ral-box{position:relative;flex:0 0 auto}
+  .ral-box .cur{
+    position:absolute;left:0;top:50%;transform:translateY(-50%);
+    font-family:'Archivo',sans-serif;font-weight:400;
+    font-size:clamp(30px,6vw,44px);color:var(--ink-48);pointer-events:none;
+  }
+  #ral{
+    width:clamp(190px,42vw,280px);
+    font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 108;
+    font-weight:700;font-size:clamp(34px,7vw,52px);letter-spacing:-.02em;
+    color:var(--ink);background:transparent;
+    border:none;border-bottom:2px solid var(--ink);border-radius:0;
+    padding:2px 0 6px 34px;-moz-appearance:textfield;
+  }
+  #ral::-webkit-outer-spin-button,#ral::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  #ral[aria-invalid=true]{border-bottom-color:var(--warn);color:var(--warn)}
+  .ral-unit{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    color:var(--ink-48);padding-bottom:12px;
+  }
+
+  .slider-wrap{margin-top:26px}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:24px;background:transparent;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--ink-18);border-radius:2px}
+  input[type=range]::-moz-range-track{height:2px;background:var(--ink-18);border-radius:2px}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:18px;height:18px;margin-top:-8px;
+    background:var(--ink);border:none;border-radius:50%;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px;height:18px;border:none;border-radius:50%;background:var(--ink);
+  }
+  .ticks{
+    display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;
+    color:var(--ink-48);margin-top:2px;
+  }
+  .oltre{
+    display:none;margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48);
+  }
+  .oltre.on{display:block}
+
+  .seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:32px}
+  .seg{display:flex;border:1px solid var(--ink-18);border-radius:var(--r);overflow:hidden}
+  .seg button{
+    flex:1;font-family:'IBM Plex Mono',monospace;font-size:13px;
+    color:var(--ink-72);background:var(--surface);
+    border:none;border-right:1px solid var(--ink-18);
+    padding:13px 6px;cursor:pointer;transition:background .15s,color .15s;
+  }
+  .seg button:last-child{border-right:none}
+  .seg button:hover{background:var(--bg)}
+  .seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+
+  .adv{border-top:1px solid var(--ink-09)}
+  .adv > summary{
+    padding:16px clamp(22px,4vw,34px);cursor:pointer;list-style:none;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-72);
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  .adv > summary::-webkit-details-marker{display:none}
+  .adv > summary .chev{color:var(--net);font-size:15px}
+  .adv[open] > summary .chev{transform:rotate(45deg);display:inline-block}
+  .adv-note{
+    padding:0 clamp(22px,4vw,34px) 4px;
+    font-size:13px;color:var(--ink-48);max-width:64ch;
+  }
+  .adv-body{
+    padding:16px clamp(22px,4vw,34px) 28px;
+    display:grid;grid-template-columns:1fr 1fr;gap:28px;
+  }
+  .check{display:flex;gap:11px;align-items:flex-start;cursor:pointer}
+  .check input{
+    appearance:none;-webkit-appearance:none;
+    width:19px;height:19px;flex:0 0 19px;margin-top:2px;
+    border:1.5px solid var(--ink-18);border-radius:3px;
+    background:var(--surface);cursor:pointer;position:relative;
+  }
+  .check input:checked{background:var(--net);border-color:var(--net)}
+  .check input:checked::after{
+    content:"";position:absolute;left:5.5px;top:1.5px;
+    width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg);
+  }
+  .check .txt strong{display:block;font-weight:600;font-size:14px}
+  .check .txt span{font-size:13px;color:var(--ink-48);line-height:1.45}
+  .sub-opt{margin:14px 0 0 30px;display:none}
+  .sub-opt.on{display:block}
+  .num-in{
+    width:100%;font-family:'IBM Plex Mono',monospace;font-size:15px;
+    color:var(--ink);background:var(--bg);
+    border:1px solid var(--ink-18);border-radius:var(--r);
+    padding:11px 13px;-moz-appearance:textfield;
+  }
+  .num-in::-webkit-outer-spin-button,.num-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .hint{font-size:12px;color:var(--ink-48);margin-top:7px}
+
+  .go{
+    width:100%;font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 108;
+    font-weight:700;font-size:17px;letter-spacing:-.01em;
+    color:#fff;background:var(--ink);
+    border:none;border-radius:0 0 3px 3px;
+    padding:19px;cursor:pointer;transition:background .18s var(--ease);
+  }
+  .go:hover{background:var(--net)}
+
+  :focus-visible{outline:2px solid var(--net);outline-offset:2px}
+
+  .err{display:none;padding:0 clamp(22px,4vw,34px) 18px;font-size:14px;color:var(--warn)}
+  .err.on{display:block}
+
+  /* ══ risultato ══ */
+  #out[hidden]{display:none}
+
+  h2{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-48);margin-bottom:18px;
+  }
+  .h2-gap{margin-top:56px}
+
+  .hero{
+    margin-top:56px;background:var(--ink);color:#fff;border-radius:var(--r);
+    padding:clamp(26px,5vw,44px);
+    display:grid;grid-template-columns:1.2fr 1fr;gap:36px;align-items:end;
+  }
+  .hero .k{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(255,255,255,.5);margin-bottom:10px;
+  }
+  .hero .big{
+    font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 115;
+    font-weight:800;font-size:clamp(46px,10vw,86px);
+    line-height:.86;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+  }
+  .hero .cadence{margin-top:12px;font-size:14px;color:rgba(255,255,255,.6)}
+  .hero .year{
+    font-family:'Archivo',sans-serif;font-weight:700;
+    font-size:clamp(24px,4vw,34px);letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  }
+  .rates{
+    display:flex;gap:26px;margin-top:22px;
+    padding-top:20px;border-top:1px solid rgba(255,255,255,.16);
+  }
+  .rates div{flex:1}
+  .rates .v{font-family:'IBM Plex Mono',monospace;font-size:19px;font-variant-numeric:tabular-nums}
+  .rates .n{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;line-height:1.3}
+
+  /* ══ la colonna: elemento firma ══
+     ogni banda è alta in proporzione alla sua quota di RAL. la riga
+     È il segmento, così non c'è una legenda da incrociare col grafico. */
+  .stack{display:flex;flex-direction:column;gap:2px}
+  .band{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:18px;padding:0 clamp(14px,3vw,26px);
+    color:#fff;border-radius:2px;overflow:hidden;
+    transition:height .5s var(--ease);
+  }
+  .band .l{min-width:0}
+  .band .t{
+    display:block;font-weight:600;font-size:clamp(13px,2.6vw,15px);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .band .s{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .band .r{text-align:right;flex:0 0 auto}
+  .band .a{
+    display:block;font-family:'IBM Plex Mono',monospace;
+    font-size:clamp(14px,3vw,16px);font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .band .pc{
+    display:block;font-family:'IBM Plex Mono',monospace;
+    font-size:11px;opacity:.62;
+  }
+  .band.net .t{font-size:clamp(15px,3vw,17px)}
+  .band.net .a{font-size:clamp(20px,4.5vw,26px);font-weight:600}
+  /* segnala le bande portate all'altezza minima: senza questo la
+     didascalia prometterebbe una proporzionalità che non c'è. */
+  .band.floor{border-left:3px solid rgba(255,255,255,.42)}
+
+  .stack-cap{
+    display:flex;justify-content:space-between;gap:16px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    color:var(--ink-48);margin-top:10px;
+  }
+
+  /* ══ dettaglio ══ */
+  details.detail{
+    margin-top:44px;background:var(--surface);
+    border:1px solid var(--ink-18);border-radius:var(--r);
+  }
+  details.detail > summary{
+    padding:17px clamp(20px,4vw,28px);cursor:pointer;list-style:none;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-72);
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  details.detail > summary::-webkit-details-marker{display:none}
+  details.detail > summary .chev{color:var(--net);font-size:15px}
+  details.detail[open] > summary .chev{transform:rotate(45deg);display:inline-block}
+  .dbody{padding:4px clamp(20px,4vw,28px) 30px;border-top:1px solid var(--ink-09)}
+  .dbody h3{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-48);margin:26px 0 6px;
+  }
+  .dbody table{
+    width:100%;border-collapse:collapse;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-variant-numeric:tabular-nums;
+  }
+  .dbody td{padding:7px 0;border-bottom:1px solid var(--ink-09);vertical-align:top}
+  .dbody td:last-child{text-align:right;white-space:nowrap;padding-left:16px}
+  .dbody tr:last-child td{border-bottom:none}
+  .dbody tr.tot td{font-weight:600;border-top:1px solid var(--ink);border-bottom:none}
+  .dbody tr.neg td:last-child{color:var(--ink-72)}
+
+  /* ══ ipotesi ══ */
+  .notes{margin-top:72px;padding-top:34px;border-top:1px solid var(--ink-18)}
+  .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+  .notes ul{list-style:none;display:grid;gap:13px}
+  .notes li{font-size:14px;color:var(--ink-72);padding-left:19px;position:relative}
+  .notes li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:1px;background:var(--net)}
+  .notes b{color:var(--ink);font-weight:600}
+  .src{
+    margin-top:34px;padding-top:22px;border-top:1px solid var(--ink-09);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48);line-height:2;
+  }
+  .src a{color:var(--ink-72)}
+
+  @media (max-width:820px){
+    .hero{grid-template-columns:1fr;gap:28px}
+    .seg-grid,.adv-body,.notes-grid{grid-template-columns:1fr;gap:24px}
+  }
+  @media (max-width:460px){
+    .band .s{display:none}
+    .band .pc{display:none}
+    .rates{flex-direction:column;gap:14px}
+    .stack-cap{flex-direction:column;gap:4px}
+  }
+
+  @media print{
+    body{background:#fff}
+    .form,.slider-wrap,.skip{display:none}
+    .hero{background:#fff;color:#000;border:1px solid #000}
+    .hero .k,.hero .cadence,.rates .n{color:#444}
+    details.detail{border:none}
+    .band{color:#000 !important;background:#fff !important;
+      border:1px solid #999;height:auto !important;padding:8px 12px}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#out">Salta al risultato</a>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="tag">Calcolatore retribuzione netta</p>
+    <p class="tag" id="stamp">Anno d'imposta 2026 · Milano</p>
+  </header>
+
+  <h1>Dove finisce<br>la tua <span class="b">RAL</span>.</h1>
+  <p class="lede">Inserisci la retribuzione annua lorda. Il calcolatore scompone ogni voce trattenuta sul lordo e restituisce il netto annuale e mensile.</p>
+
+<main id="main">
+  <!-- ══════════ input ══════════ -->
+  <div class="form">
+    <div class="form-main">
+
+      <label class="lbl" for="ral">Retribuzione annua lorda</label>
+      <div class="ral-row">
+        <div class="ral-box">
+          <span class="cur" aria-hidden="true">€</span>
+          <input type="number" id="ral" value="35000" min="1" max="1000000" step="500"
+                 inputmode="numeric" aria-describedby="err">
+        </div>
+        <span class="ral-unit">lordi / anno</span>
+      </div>
+
+      <div class="slider-wrap">
+        <input type="range" id="slider" min="10000" max="150000" step="500" value="35000"
+               aria-label="Regola la retribuzione annua lorda">
+        <div class="ticks" aria-hidden="true">
+          <span>10k</span><span>50k</span><span>100k</span><span>150k</span>
+        </div>
+        <p class="oltre" id="oltre">Valore oltre la scala del cursore: il calcolo usa comunque la cifra digitata.</p>
+      </div>
+
+      <div class="seg-grid">
+        <div>
+          <span class="lbl" id="lbl-m">Mensilità</span>
+          <div class="seg" role="group" aria-labelledby="lbl-m" id="segMens">
+            <button type="button" data-v="12" aria-pressed="false">12</button>
+            <button type="button" data-v="13" aria-pressed="true">13</button>
+            <button type="button" data-v="14" aria-pressed="false">14</button>
+          </div>
+        </div>
+        <div>
+          <span class="lbl" id="lbl-y">Anno d'imposta</span>
+          <div class="seg" role="group" aria-labelledby="lbl-y" id="segAnno">
+            <button type="button" data-v="2025" aria-pressed="false">2025</button>
+            <button type="button" data-v="2026" aria-pressed="true">2026</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <details class="adv">
+      <summary>Agevolazioni e versamenti volontari <span class="chev" aria-hidden="true">+</span></summary>
+      <p class="adv-note">Il caso standard non prevede agevolazioni. Queste opzioni restano spente salvo tua scelta esplicita, e portano il calcolo fuori dal caso base.</p>
+      <div class="adv-body">
+
+        <div>
+          <label class="check">
+            <input type="checkbox" id="imp">
+            <span class="txt">
+              <strong>Regime impatriati</strong>
+              <span>Solo il 50% del reddito da lavoro concorre all'imponibile, entro 600.000 € annui.</span>
+            </span>
+          </label>
+          <div class="sub-opt" id="impSub">
+            <label class="check">
+              <input type="checkbox" id="impFigli">
+              <span class="txt">
+                <strong>Con figlio minore</strong>
+                <span>La quota imponibile scende dal 50% al 40%.</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="lbl" for="prev">Previdenza complementare</label>
+          <input type="number" class="num-in" id="prev" value="0" min="0" max="50000" step="100"
+                 placeholder="0" inputmode="numeric">
+          <p class="hint">Versamento annuo al fondo pensione. Deducibile fino a 5.164,57 €: abbatte l'imponibile, ma esce comunque dalla busta paga.</p>
+        </div>
+
+      </div>
+    </details>
+
+    <p class="err" id="err" role="alert"></p>
+    <button class="go" id="go">Calcola il netto</button>
+  </div>
+
+  <!-- ══════════ output ══════════ -->
+  <div id="out" hidden aria-live="polite">
+
+    <div class="hero">
+      <div>
+        <p class="k" id="heroK">Netto mensile</p>
+        <p class="big" id="heroV">—</p>
+        <p class="cadence" id="heroC"></p>
+      </div>
+      <div>
+        <p class="k">Netto annuale</p>
+        <p class="year" id="heroY">—</p>
+        <div class="rates">
+          <div>
+            <p class="v" id="rEff">—</p>
+            <p class="n">Prelievo<br>effettivo</p>
+          </div>
+          <div>
+            <p class="v" id="rMarg">—</p>
+            <p class="n">Aliquota<br>marginale</p>
+          </div>
+          <div>
+            <p class="v" id="rTot">—</p>
+            <p class="n">Totale<br>trattenute</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="h2-gap">Composizione del lordo</h2>
+    <div class="stack" id="stack"></div>
+    <div class="stack-cap">
+      <span id="capNota">Altezza proporzionale alla quota di RAL</span>
+      <span id="capRal"></span>
+    </div>
+
+    <details class="detail">
+      <summary>Dettaglio del calcolo, voce per voce <span class="chev" aria-hidden="true">+</span></summary>
+      <div class="dbody" id="detail"></div>
+    </details>
+  </div>
+</main>
+
+  <!-- ══════════ ipotesi ══════════ -->
+  <div class="notes">
+    <h2>Ipotesi e semplificazioni</h2>
+    <div class="notes-grid">
+      <ul>
+        <li><b>Impiegato del settore privato</b>, tempo indeterminato, full time, in forza per l'intero anno.</li>
+        <li><b>Residenza fiscale a Milano.</b> Addizionale regionale Lombardia progressiva; addizionale comunale allo 0,8%, esente sotto 23.000 € di imponibile.</li>
+        <li><b>Contributi INPS al 9,19%</b> della RAL, quota IVS a carico del lavoratore nel Fondo Pensioni Lavoratori Dipendenti. Massimale contributivo non applicato.</li>
+        <li><b>Nessuna detrazione oltre quella per lavoro dipendente</b> (art. 13 TUIR): niente familiari a carico, mutuo o spese sanitarie.</li>
+      </ul>
+      <ul>
+        <li><b>Il CCNL non entra nel calcolo.</b> La fiscalità è identica per ogni dipendente; il contratto incide solo sul numero di mensilità, che è già un input.</li>
+        <li><b>Il netto mensile è una media.</b> In busta paga la tredicesima è tassata in modo leggermente diverso, perché su di essa non si applicano le detrazioni mensili.</li>
+        <li><b>TFR escluso</b>: matura come accantonamento e non transita dal netto. Esclusi anche welfare e fringe benefit.</li>
+        <li><b>Le due agevolazioni sono opzionali e spente per default.</b> Sul plafond di previdenza complementare si assume che sia consumato dal solo versamento del lavoratore, ignorando TFR conferito e quota datoriale.</li>
+      </ul>
+    </div>
+    <p class="src">
+      Scaglioni IRPEF — art. 11 TUIR, come modificato dalla L. 199/2025<br>
+      Detrazioni lavoro dipendente — art. 13 TUIR, D.Lgs. 216/2023<br>
+      Cuneo fiscale — L. 207/2024 art. 1 commi 4 e 6, reso strutturale dalla L. 199/2025<br>
+      Regime impatriati — art. 5 D.Lgs. 209/2023, modificato dalla L. 132/2025<br>
+      Previdenza complementare — art. 8 D.Lgs. 252/2005<br>
+      Aliquote contributive — <a href="https://www.inps.it">INPS</a>, Fondo Pensioni Lavoratori Dipendenti<br>
+      Addizionale regionale — <a href="https://www.regione.lombardia.it">Regione Lombardia</a>, art. 72 L.R. 10/2003<br>
+      Addizionale comunale — <a href="https://www.comune.milano.it">Comune di Milano</a>, delibera C.C. 36/2013
+    </p>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   1. PARAMETRI NORMATIVI
+   Tutti i valori di legge stanno qui, separati dalla logica.
+   Aggiornare il calcolatore a un nuovo anno significa toccare
+   solo questo blocco.
+   ═══════════════════════════════════════════════════════════════ */
+
+const P = {
+
+  // Quota IVS a carico del lavoratore. Il 33% complessivo si divide
+  // in 23,81% datore + 9,19% lavoratore.
+  INPS: 0.0919,
+
+  // `fino` = limite superiore dello scaglione.
+  IRPEF: {
+    2026: [{fino:28000,al:.23},{fino:50000,al:.33},{fino:Infinity,al:.43}],
+    2025: [{fino:28000,al:.23},{fino:50000,al:.35},{fino:Infinity,al:.43}]
+  },
+
+  // Addizionale regionale Lombardia: progressiva, sugli stessi scaglioni.
+  REG: [{fino:15000,al:.0123},{fino:28000,al:.0158},
+        {fino:50000,al:.0172},{fino:Infinity,al:.0173}],
+
+  // Addizionale comunale Milano. L'esenzione non è una franchigia:
+  // sopra soglia si paga sull'intero imponibile.
+  COM: {al:.008, esenteFinoA:23000},
+
+  // Regime impatriati: quota di reddito che concorre all'imponibile.
+  IMPATRIATI: {quota:.50, quotaConFigli:.40, tetto:600000},
+
+  // Tetto di deducibilità del versamento a fondo pensione.
+  PREV_MAX: 5164.57,
+
+  // Limiti di input accettati.
+  RAL_MAX: 1000000
+};
+
+
+/* ═══════════════════════════════════════════════════════════════
+   2. FUNZIONI DI CALCOLO
+   ═══════════════════════════════════════════════════════════════ */
+
+/**
+ * Imposta progressiva per scaglioni: ogni aliquota colpisce solo
+ * la porzione di reddito che ricade nel proprio scaglione.
+ */
+function perScaglioni(imponibile, scaglioni){
+  let totale = 0, soglia = 0;
+  const righe = [];
+  for(const s of scaglioni){
+    if(imponibile <= soglia) break;
+    const quota = Math.min(imponibile, s.fino) - soglia;
+    const imposta = quota * s.al;
+    totale += imposta;
+    righe.push({da:soglia, a:Math.min(imponibile,s.fino), al:s.al, quota, imposta});
+    soglia = s.fino;
+  }
+  return {totale, righe};
+}
+
+/** Aliquota marginale: quella che colpisce l'ultimo euro guadagnato. */
+function aliquotaMarginale(reddito, scaglioni){
+  for(const s of scaglioni) if(reddito <= s.fino) return s.al;
+  return scaglioni[scaglioni.length - 1].al;
+}
+
+/**
+ * Detrazione per redditi da lavoro dipendente — art. 13 co. 1 TUIR.
+ * Decresce col reddito e si azzera oltre 50.000 €.
+ * Il comma 1-bis aggiunge 65 € nella fascia 25.000–35.000 €.
+ */
+function detrazioneLavoro(reddito){
+  let base;
+  if(reddito <= 15000)      base = 1955;
+  else if(reddito <= 28000) base = 1910 + 1190 * (28000 - reddito) / 13000;
+  else if(reddito <= 50000) base = 1910 * (50000 - reddito) / 22000;
+  else                      base = 0;
+
+  const extra = (reddito > 25000 && reddito <= 35000) ? 65 : 0;
+  return {base, extra, totale: base + extra};
+}
+
+/**
+ * Taglio del cuneo fiscale.
+ * Due meccanismi diversi che non vanno confusi:
+ *  – fino a 20.000 € è una somma ESENTE, si aggiunge al netto
+ *    senza passare dall'IRPEF;
+ *  – oltre, è una DETRAZIONE che abbatte l'imposta.
+ */
+function cuneo(reddito){
+  if(reddito <= 8500)  return {tipo:'bonus', importo:reddito*.071, al:'7,1%'};
+  if(reddito <= 15000) return {tipo:'bonus', importo:reddito*.053, al:'5,3%'};
+  if(reddito <= 20000) return {tipo:'bonus', importo:reddito*.048, al:'4,8%'};
+  if(reddito <= 32000) return {tipo:'detrazione', importo:1000};
+  if(reddito <= 40000) return {tipo:'detrazione', importo:1000*(40000-reddito)/8000};
+  return {tipo:'nessuno', importo:0};
+}
+
+/**
+ * Regime impatriati: solo una quota del reddito concorre
+ * all'imponibile, entro il tetto di 600.000 €. L'eccedenza
+ * è tassata per intero.
+ */
+function abbattiImpatriati(reddito, conFigli){
+  const q = conFigli ? P.IMPATRIATI.quotaConFigli : P.IMPATRIATI.quota;
+  const agevolabile = Math.min(reddito, P.IMPATRIATI.tetto);
+  const eccedenza   = Math.max(0, reddito - P.IMPATRIATI.tetto);
+  return {imponibile: agevolabile*q + eccedenza, quota:q, esentato: agevolabile*(1-q)};
+}
+
+/** Motore principale: da RAL a netto. */
+function calcola(ral, anno, opt){
+  opt = opt || {};
+
+  // 1. Contributi previdenziali obbligatori a carico del lavoratore.
+  //    Si calcolano sempre sulla RAL piena: le agevolazioni fiscali
+  //    non toccano la base contributiva.
+  const contributi = ral * P.INPS;
+
+  // 2. Versamento volontario a fondo pensione: deducibile entro il
+  //    tetto, ed esce comunque dalla busta paga.
+  const prevVersata = Math.max(0, opt.prev || 0);
+  const prevDeducib = Math.min(prevVersata, P.PREV_MAX);
+
+  // 3. Reddito complessivo prima di eventuali agevolazioni.
+  const redditoBase = Math.max(0, ral - contributi - prevDeducib);
+
+  // 4. Regime impatriati: abbatte la base imponibile.
+  const imp = opt.impatriati
+    ? abbattiImpatriati(redditoBase, opt.impFigli)
+    : {imponibile: redditoBase, quota:1, esentato:0};
+  const imponibile = imp.imponibile;
+
+  // 5. IRPEF lorda per scaglioni.
+  const irpef = perScaglioni(imponibile, P.IRPEF[anno]);
+
+  // 6. Detrazioni: abbattono l'imposta, non il reddito.
+  const detr = detrazioneLavoro(imponibile);
+  const cun  = cuneo(imponibile);
+  const detrCuneo   = cun.tipo === 'detrazione' ? cun.importo : 0;
+  const bonusEsente = cun.tipo === 'bonus'      ? cun.importo : 0;
+
+  // 7. L'IRPEF netta non scende sotto zero: le detrazioni eccedenti
+  //    si perdono, l'incapienza non genera rimborso in questo modello.
+  const irpefNetta = Math.max(0, irpef.totale - detr.totale - detrCuneo);
+
+  // 8. Addizionali locali: si calcolano sull'imponibile,
+  //    non sull'IRPEF, e non risentono delle detrazioni.
+  const reg = perScaglioni(imponibile, P.REG);
+  const com = imponibile > P.COM.esenteFinoA ? imponibile * P.COM.al : 0;
+
+  // 9. Netto.
+  const imposte    = irpefNetta + reg.totale + com;
+  const trattenute = contributi + prevVersata + imposte;
+  const netto      = ral - trattenute + bonusEsente;
+
+  return {
+    ral, anno, contributi, prevVersata, prevDeducib,
+    redditoBase, imponibile, impatriati: opt.impatriati ? imp : null,
+    irpefLorda: irpef.totale, irpefRighe: irpef.righe,
+    detr, cuneo: cun, detrCuneo, bonusEsente, irpefNetta,
+    reg: reg.totale, regRighe: reg.righe, com,
+    imposte, trattenute, netto,
+    marginale: aliquotaMarginale(imponibile, P.IRPEF[anno])
+  };
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   3. PRESENTAZIONE
+   ═══════════════════════════════════════════════════════════════ */
+
+const eur  = n => new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',
+                    maximumFractionDigits:0}).format(n);
+const eur2 = n => new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',
+                    minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const pc   = n => (n*100).toLocaleString('it-IT',{maximumFractionDigits:1})+'%';
+const pc2  = n => (n*100).toLocaleString('it-IT',{maximumFractionDigits:2})+'%';
+
+const motoRidotto = matchMedia('(prefers-reduced-motion: reduce)');
+
+/* Un solo ciclo di animazione alla volta: senza questo, trascinando
+   lo slider si accumulano decine di loop concorrenti sullo stesso
+   elemento e il numero sfarfalla. */
+let frameId = null;
+function conta(el, da, a, fmt){
+  if(frameId !== null){ cancelAnimationFrame(frameId); frameId = null; }
+  if(motoRidotto.matches || da === 0 || Math.abs(a - da) < 1){
+    el.textContent = fmt(a);
+    return;
+  }
+  const t0 = performance.now(), dur = 420;
+  frameId = requestAnimationFrame(function step(t){
+    const p = Math.min(1, (t - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(da + (a - da) * e);
+    frameId = p < 1 ? requestAnimationFrame(step) : null;
+  });
+}
+
+let ultimoMensile = 0;
+
+function render(r, mensilita){
+  const mensile = r.netto / mensilita;
+
+  /* ── eroe ── */
+  document.getElementById('heroK').textContent = 'Netto mensile su ' + mensilita + ' mensilità';
+  conta(document.getElementById('heroV'), ultimoMensile, mensile, eur2);
+  ultimoMensile = mensile;
+
+  document.getElementById('heroC').textContent = mensilita === 12
+    ? 'Nessuna mensilità aggiuntiva: il netto è diviso sui dodici mesi.'
+    : 'Comprende ' + (mensilita === 13 ? 'la tredicesima' : 'tredicesima e quattordicesima')
+      + ', spalmata in media su ogni mensilità.';
+
+  document.getElementById('heroY').textContent = eur(r.netto);
+  document.getElementById('rEff').textContent  = pc(r.trattenute / r.ral);
+  document.getElementById('rMarg').textContent = pc(r.marginale);
+  document.getElementById('rTot').textContent  = eur(r.trattenute);
+
+  /* ── la colonna ── */
+  const voci = [
+    {c:'var(--d1)', t:'Contributi INPS',
+     s:'quota lavoratore · ' + pc2(P.INPS) + ' della RAL', v:r.contributi},
+    {c:'var(--d2)', t:'IRPEF netta',
+     s:'lorda ' + eur(r.irpefLorda) + ' − detrazioni ' + eur(r.detr.totale + r.detrCuneo),
+     v:r.irpefNetta},
+    {c:'var(--d3)', t:'Addizionale regionale', s:'Lombardia · progressiva', v:r.reg},
+    {c:'var(--d4)', t:'Addizionale comunale',
+     s: r.com > 0 ? 'Milano · ' + pc2(P.COM.al)
+                  : 'Milano · esente sotto ' + eur(P.COM.esenteFinoA), v:r.com}
+  ];
+  if(r.prevVersata > 0) voci.push({c:'var(--d5)', t:'Previdenza complementare',
+    s:'versamento volontario al fondo pensione', v:r.prevVersata});
+
+  voci.push({c:'var(--net)', t:'Netto annuale', s:'', v:r.netto, net:true});
+
+  // altezza scalata al viewport, così la codifica proporzionale
+  // sopravvive anche su schermi stretti invece di essere disattivata.
+  const stretto = window.innerWidth < 560;
+  const H   = stretto ? 300 : 430;
+  const MIN = stretto ? 46  : 56;
+  let tagliate = 0;
+
+  document.getElementById('stack').innerHTML = voci.map(function(v){
+    const share = v.v / r.ral;
+    const naturale = share * H;
+    const floor = naturale < MIN;
+    if(floor && !v.net) tagliate++;
+    return '<div class="band' + (v.net ? ' net' : '') + (floor ? ' floor' : '')
+      + '" style="background:' + v.c + ';height:' + Math.max(MIN, naturale).toFixed(0) + 'px">'
+      + '<span class="l"><span class="t">' + v.t + '</span>'
+      + (v.s ? '<span class="s">' + v.s + '</span>' : '') + '</span>'
+      + '<span class="r"><span class="a">' + (v.net ? '' : '−') + eur(v.v) + '</span>'
+      + '<span class="pc">' + pc(share) + '</span></span></div>';
+  }).join('');
+
+  document.getElementById('capNota').textContent = tagliate > 0
+    ? 'Altezza proporzionale alla quota di RAL; le bande marcate a sinistra sono al minimo leggibile'
+    : 'Altezza proporzionale alla quota di RAL';
+  document.getElementById('capRal').textContent = 'RAL ' + eur(r.ral) + ' = 100%';
+
+  /* ── dettaglio ── */
+  const rowsIrpef = r.irpefRighe.map(function(s){
+    return '<tr><td>da ' + eur(s.da) + ' a ' + eur(s.a) + ' — ' + pc(s.al)
+      + '</td><td>' + eur2(s.imposta) + '</td></tr>'; }).join('');
+  const rowsReg = r.regRighe.map(function(s){
+    return '<tr><td>da ' + eur(s.da) + ' a ' + eur(s.a) + ' — ' + pc2(s.al)
+      + '</td><td>' + eur2(s.imposta) + '</td></tr>'; }).join('');
+
+  let rowsDetr = '<tr><td>Lavoro dipendente, art. 13 co. 1 TUIR</td><td>' + eur2(r.detr.base) + '</td></tr>';
+  if(r.detr.extra) rowsDetr += '<tr><td>Maggiorazione comma 1-bis, redditi 25–35k</td><td>' + eur2(r.detr.extra) + '</td></tr>';
+  if(r.detrCuneo)  rowsDetr += '<tr><td>Ulteriore detrazione da cuneo fiscale</td><td>' + eur2(r.detrCuneo) + '</td></tr>';
+  rowsDetr += '<tr class="tot"><td>Totale detrazioni</td><td>' + eur2(r.detr.totale + r.detrCuneo) + '</td></tr>';
+
+  const bloccoImp = r.impatriati
+    ? '<h3>Regime impatriati</h3><table>'
+      + '<tr><td>Reddito prima dell\'agevolazione</td><td>' + eur2(r.redditoBase) + '</td></tr>'
+      + '<tr class="neg"><td>Quota esclusa da imposizione, ' + pc(1 - r.impatriati.quota)
+      + '</td><td>−' + eur2(r.impatriati.esentato) + '</td></tr>'
+      + '<tr class="tot"><td>Reddito imponibile agevolato</td><td>' + eur2(r.imponibile) + '</td></tr></table>'
+    : '';
+
+  const rigaPrev = r.prevVersata > 0
+    ? '<tr class="neg"><td>Previdenza complementare, dedotta'
+      + (r.prevVersata > r.prevDeducib
+          ? ' (' + eur2(r.prevVersata - r.prevDeducib) + ' oltre il tetto, non deducibile)' : '')
+      + '</td><td>−' + eur2(r.prevDeducib) + '</td></tr>'
+    : '';
+
+  document.getElementById('detail').innerHTML =
+    '<h3>Base imponibile</h3><table>'
+    + '<tr><td>Retribuzione annua lorda</td><td>' + eur2(r.ral) + '</td></tr>'
+    + '<tr class="neg"><td>Contributi INPS a carico del lavoratore, ' + pc2(P.INPS)
+    + '</td><td>−' + eur2(r.contributi) + '</td></tr>'
+    + rigaPrev
+    + '<tr class="tot"><td>Reddito complessivo</td><td>' + eur2(r.redditoBase) + '</td></tr></table>'
+
+    + bloccoImp
+
+    + '<h3>IRPEF lorda per scaglioni — ' + r.anno + '</h3><table>' + rowsIrpef
+    + '<tr class="tot"><td>Imposta lorda</td><td>' + eur2(r.irpefLorda) + '</td></tr></table>'
+
+    + '<h3>Detrazioni d\'imposta</h3><table>' + rowsDetr + '</table>'
+
+    + '<h3>IRPEF netta</h3><table><tr class="tot"><td>Imposta lorda meno detrazioni'
+    + (r.irpefLorda - r.detr.totale - r.detrCuneo < 0 ? ', azzerata per incapienza' : '')
+    + '</td><td>' + eur2(r.irpefNetta) + '</td></tr></table>'
+
+    + '<h3>Addizionale regionale — Lombardia</h3><table>' + rowsReg
+    + '<tr class="tot"><td>Totale</td><td>' + eur2(r.reg) + '</td></tr></table>'
+
+    + '<h3>Addizionale comunale — Milano</h3><table><tr><td>'
+    + (r.com > 0 ? pc2(P.COM.al) + ' su ' + eur2(r.imponibile)
+                 : 'Imponibile sotto la soglia di esenzione di ' + eur(P.COM.esenteFinoA))
+    + '</td><td>' + eur2(r.com) + '</td></tr></table>'
+
+    + '<h3>Dal lordo al netto</h3><table>'
+    + '<tr><td>Retribuzione annua lorda</td><td>' + eur2(r.ral) + '</td></tr>'
+    + '<tr class="neg"><td>Contributi INPS</td><td>−' + eur2(r.contributi) + '</td></tr>'
+    + (r.prevVersata > 0 ? '<tr class="neg"><td>Previdenza complementare</td><td>−' + eur2(r.prevVersata) + '</td></tr>' : '')
+    + '<tr class="neg"><td>IRPEF netta</td><td>−' + eur2(r.irpefNetta) + '</td></tr>'
+    + '<tr class="neg"><td>Addizionale regionale</td><td>−' + eur2(r.reg) + '</td></tr>'
+    + '<tr class="neg"><td>Addizionale comunale</td><td>−' + eur2(r.com) + '</td></tr>'
+    + (r.bonusEsente ? '<tr><td>Bonus cuneo fiscale, somma esente</td><td>+' + eur2(r.bonusEsente) + '</td></tr>' : '')
+    + '<tr class="tot"><td>Netto annuale</td><td>' + eur2(r.netto) + '</td></tr>'
+    + '<tr class="tot"><td>Netto su ' + mensilita + ' mensilità</td><td>' + eur2(mensile) + '</td></tr>'
+    + '</table>';
+
+  document.getElementById('out').hidden = false;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   4. INTERAZIONE
+   ═══════════════════════════════════════════════════════════════ */
+
+const $ = id => document.getElementById(id);
+const visibile = () => !$('out').hidden;
+
+const valSeg = id => $(id).querySelector('[aria-pressed=true]').dataset.v;
+
+/** Valida la RAL e restituisce il numero, oppure null con messaggio. */
+function leggiRal(){
+  const grezzo = $('ral').value.trim();
+  if(grezzo === '')            return {err:'Inserisci una retribuzione annua lorda.'};
+  const v = Number(grezzo);
+  if(!Number.isFinite(v))      return {err:'Il valore inserito non è un numero.'};
+  if(v <= 0)                   return {err:'La RAL deve essere maggiore di zero.'};
+  if(v > P.RAL_MAX)            return {err:'Valore massimo accettato: ' + eur(P.RAL_MAX) + '.'};
+  return {v};
+}
+
+function mostraErrore(msg){
+  const el = $('err');
+  el.textContent = msg || '';
+  el.classList.toggle('on', !!msg);
+  $('ral').setAttribute('aria-invalid', msg ? 'true' : 'false');
+}
+
+/** Allinea il cursore al campo, segnalando quando il valore lo eccede. */
+function sincronizzaSlider(v){
+  const min = Number($('slider').min), max = Number($('slider').max);
+  $('slider').value = Math.min(max, Math.max(min, v));
+  $('oltre').classList.toggle('on', v > max || v < min);
+}
+
+function esegui(){
+  const {v, err} = leggiRal();
+  if(err){ mostraErrore(err); $('out').hidden = true; return; }
+  mostraErrore(null);
+  sincronizzaSlider(v);
+  render(
+    calcola(v, valSeg('segAnno'), {
+      impatriati: $('imp').checked,
+      impFigli:   $('impFigli').checked,
+      prev:       Math.max(0, Number($('prev').value) || 0)
+    }),
+    Number(valSeg('segMens'))
+  );
+}
+
+/* Dopo il primo calcolo ogni modifica aggiorna subito il risultato:
+   ripremere il pulsante per vedere l'effetto di uno slider sarebbe
+   punitivo. Prima del primo calcolo, invece, non si mostra nulla. */
+const seVisibile = () => { if(visibile()) esegui(); };
+
+['segMens','segAnno'].forEach(id => {
+  $(id).addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if(!b) return;
+    $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    $('stamp').textContent = "Anno d'imposta " + valSeg('segAnno') + ' · Milano';
+    seVisibile();
+  });
+});
+
+$('slider').addEventListener('input', () => {
+  $('ral').value = $('slider').value;
+  $('oltre').classList.remove('on');
+  seVisibile();
+});
+
+// il campo numerico e il cursore devono comportarsi allo stesso modo:
+// prima solo il cursore ricalcolava, e digitare sembrava non fare nulla.
+$('ral').addEventListener('input', () => {
+  const {v} = leggiRal();
+  if(v !== undefined) sincronizzaSlider(v);
+  seVisibile();
+});
+$('ral').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); esegui(); } });
+
+$('imp').addEventListener('change', () => {
+  $('impSub').classList.toggle('on', $('imp').checked);
+  if(!$('imp').checked) $('impFigli').checked = false;
+  seVisibile();
+});
+['impFigli','prev'].forEach(id => $(id).addEventListener('input', seVisibile));
+
+// ridisegna le bande quando cambia la larghezza: le altezze
+// dipendono dal viewport.
+let resizeId;
+addEventListener('resize', () => {
+  clearTimeout(resizeId);
+  resizeId = setTimeout(seVisibile, 180);
+});
+
+$('go').addEventListener('click', esegui);
+</script>
+</body>
+</html>
