@@ -30,6 +30,7 @@
 
     /* il netto è l'unico colore saturo della pagina. */
     --net:#1B3EF5;
+    --net-2:#6E7CF7;
     --warn:#B3261E;
 
     --r:4px;
@@ -207,16 +208,34 @@
   .err{display:none;padding:0 clamp(20px,4vw,30px) 16px;font-size:14px;color:var(--warn)}
   .err.on{display:block}
 
-  /* ══ stato vuoto ══ */
-  .empty{
-    border:1px dashed var(--ink-18);border-radius:var(--r);
-    padding:clamp(28px,6vw,48px) clamp(20px,4vw,32px);
-    text-align:center;color:var(--ink-48);
+  /* ══ stato iniziale ══
+     invece di un riquadro vuoto che aspetta, lo spazio spiega
+     la sequenza del calcolo: è contenuto utile, non un segnaposto. */
+  .flow{
+    background:var(--surface);border:1px solid var(--ink-18);
+    border-radius:var(--r);padding:clamp(22px,4vw,32px);
   }
-  .empty strong{display:block;font-family:'Archivo',sans-serif;font-weight:700;
-    font-size:19px;color:var(--ink-72);margin-bottom:6px;letter-spacing:-.01em}
-  .empty span{font-size:14px}
-  @media (max-width:999px){ .empty{display:none} }
+  .flow h2{margin-bottom:6px}
+  .flow p.intro{font-size:14px;color:var(--ink-48);margin-bottom:22px;max-width:46ch}
+  .flow ol{list-style:none;counter-reset:s}
+  .flow li{
+    counter-increment:s;position:relative;padding:0 0 18px 40px;
+    font-size:14px;color:var(--ink-72);
+  }
+  .flow li::before{
+    content:counter(s);position:absolute;left:0;top:-1px;
+    width:25px;height:25px;border-radius:50%;
+    background:var(--bg);color:var(--ink-72);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .flow li:not(:last-child)::after{
+    content:"";position:absolute;left:12px;top:27px;bottom:4px;
+    width:1px;background:var(--ink-09);
+  }
+  .flow li b{display:block;color:var(--ink);font-weight:600;margin-bottom:1px}
+  .flow li.end::before{background:var(--net);color:#fff}
+  .flow li.end b{color:var(--net)}
 
   /* ══ risultato ══ */
   #out[hidden]{display:none}
@@ -250,30 +269,38 @@
   .rates .n{font-size:clamp(10px,2.5vw,11px);color:rgba(255,255,255,.5);
     margin-top:2px;line-height:1.25}
 
-  /* ══ la colonna: elemento firma ══
-     ogni banda è alta in proporzione alla sua quota di RAL.
-     la riga È il segmento, così non c'è legenda da incrociare. */
+  /* ══ composizione: elemento firma ══
+     due strumenti per due compiti distinti. La barra in alto porta
+     la proporzione, che è un confronto e va vista tutta insieme.
+     Le righe portano i numeri, e hanno altezza uniforme perché
+     leggere una cifra non richiede spazio proporzionale: prima le
+     bande si deformavano a ogni input e il blocco ballava. */
+  .compbar{
+    display:flex;gap:2px;height:56px;margin-bottom:14px;
+    border-radius:3px;overflow:hidden;
+  }
+  .compbar i{display:block;height:100%;min-width:3px;
+    transition:flex-grow .45s var(--ease)}
+
   .stack{display:flex;flex-direction:column;gap:2px}
   .band{
     display:flex;align-items:center;justify-content:space-between;
-    gap:12px;padding:0 clamp(13px,3vw,24px);
-    color:#fff;border-radius:2px;overflow:hidden;
-    transition:height .5s var(--ease);
+    gap:12px;padding:14px clamp(13px,3vw,24px);
+    min-height:70px;color:#fff;border-radius:2px;
   }
+  .band.net{min-height:96px}
   .band .l{min-width:0;flex:1 1 auto}
   .band .t{display:block;font-weight:600;font-size:clamp(13px,3.2vw,15px);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .band .s{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;
-    opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    opacity:.62;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
   .band .r{text-align:right;flex:0 0 auto}
   .band .a{display:block;font-family:'IBM Plex Mono',monospace;
     font-size:clamp(14px,3.4vw,16px);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .band .pc{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.62}
-  .band.net .t{font-size:clamp(15px,3.6vw,17px)}
-  .band.net .a{font-size:clamp(19px,4.8vw,26px);font-weight:600}
-  /* segnala le bande portate al minimo: senza questo la didascalia
-     prometterebbe una proporzionalità che lì non c'è. */
-  .band.floor{border-left:3px solid rgba(255,255,255,.42)}
+  .band .pc{display:block;font-family:'IBM Plex Mono',monospace;
+    font-size:11px;opacity:.62;margin-top:1px}
+  .band.net .t{font-size:clamp(15px,3.6vw,18px)}
+  .band.net .a{font-size:clamp(21px,5vw,28px);font-weight:600}
 
   .stack-cap{display:flex;justify-content:space-between;gap:14px;
     font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48);margin-top:10px}
@@ -437,9 +464,18 @@
   <!-- ══════════ output ══════════ -->
   <div class="col-out">
 
-    <div class="empty" id="empty">
-      <strong>Il risultato compare qui</strong>
-      <span>Imposta la RAL e premi «Calcola il netto».</span>
+    <div class="flow" id="empty">
+      <h2>Come si arriva al netto</h2>
+      <p class="intro">La sequenza applicata dal calcolatore. Imposta la RAL e premi «Calcola il netto» per vedere gli importi.</p>
+      <ol>
+        <li><b>Contributi INPS</b>Il 9,19% della RAL va all'INPS. Non è una tassa: è la tua pensione futura.</li>
+        <li><b>Imponibile fiscale</b>Quello che resta è la base su cui lo Stato calcola l'imposta.</li>
+        <li><b>IRPEF lorda</b>Tre aliquote applicate a scaglioni: ognuna colpisce solo la sua fascia di reddito, non tutto.</li>
+        <li><b>Detrazioni</b>Uno sconto sull'imposta già calcolata, che diminuisce al crescere del reddito.</li>
+        <li><b>Cuneo fiscale</b>Sotto i 20.000 € è una somma esente che si aggiunge; sopra, una detrazione in più.</li>
+        <li><b>Addizionali locali</b>Regione e comune tassano l'imponibile a parte, senza risentire delle detrazioni.</li>
+        <li class="end"><b>Netto</b>Diviso per il numero di mensilità, dà lo stipendio mensile.</li>
+      </ol>
     </div>
 
     <div id="out" hidden aria-live="polite">
@@ -462,9 +498,10 @@
       </div>
 
       <h2 class="h2-gap">Composizione del lordo</h2>
+      <div class="compbar" id="compbar" aria-hidden="true"></div>
       <div class="stack" id="stack"></div>
       <div class="stack-cap">
-        <span id="capNota">Altezza proporzionale alla quota di RAL</span>
+        <span>Barra proporzionale, righe ad altezza uniforme</span>
         <span id="capRal"></span>
       </div>
 
@@ -722,16 +759,28 @@ function render(r, mensilita){
       + ', spalmata in media su ogni mensilità.';
 
   document.getElementById('heroY').textContent = eur(r.netto);
-  document.getElementById('rEff').textContent  = pc(r.trattenute / r.ral);
+  // quota di RAL che non arriva in tasca, coerente col netto mostrato
+  document.getElementById('rEff').textContent  = pc((r.ral - r.netto) / r.ral);
   document.getElementById('rMarg').textContent = pc(r.marginale);
   document.getElementById('rTot').textContent  = eur(r.trattenute);
 
-  /* ── la colonna ── */
+  /* ── composizione ──
+     La domanda è: di ogni euro di RAL, dove finisce? Le quote si
+     misurano quindi sulla RAL. Il bonus del cuneo è una somma esente
+     che si aggiunge sopra, non una parte del lordo: compare come voce
+     propria in blu chiaro, mentre la banda del netto pesa per la sola
+     quota che viene dalla retribuzione. Senza questa distinzione le
+     percentuali sommerebbero a più del 100%. */
+  const base = r.ral;
+
+  const senzaDetr = (r.detr.totale + r.detrCuneo) === 0;
   const voci = [
     {c:'var(--d1)', t:'Contributi INPS',
      s:'quota lavoratore · ' + pc2(P.INPS) + ' della RAL', v:r.contributi},
     {c:'var(--d2)', t:'IRPEF netta',
-     s:'lorda ' + eur(r.irpefLorda) + ' − detrazioni ' + eur(r.detr.totale + r.detrCuneo),
+     s: senzaDetr
+        ? 'nessuna detrazione oltre 50.000 € di imponibile'
+        : 'lorda ' + eur(r.irpefLorda) + ' − detrazioni ' + eur(r.detr.totale + r.detrCuneo),
      v:r.irpefNetta},
     {c:'var(--d3)', t:'Addizionale regionale', s:'Lombardia · progressiva', v:r.reg},
     {c:'var(--d4)', t:'Addizionale comunale',
@@ -741,33 +790,36 @@ function render(r, mensilita){
   if(r.prevVersata > 0) voci.push({c:'var(--d5)', t:'Previdenza complementare',
     s:'versamento volontario al fondo pensione', v:r.prevVersata});
 
-  voci.push({c:'var(--net)', t:'Netto annuale', s:'', v:r.netto, net:true});
+  const conBonus = r.bonusEsente > 0;
+  voci.push({c:'var(--net)', t: conBonus ? 'Netto da retribuzione' : 'Netto annuale',
+    s: conBonus ? 'la RAL dopo tutte le trattenute' : '',
+    v: r.netto - r.bonusEsente, net:true});
 
-  /* l'altezza si scala sulla larghezza disponibile invece di essere
-     disattivata su schermi stretti: la codifica proporzionale
-     sopravvive anche sul telefono. */
-  const largh = document.getElementById('stack').clientWidth || window.innerWidth;
-  const stretto = largh < 480;
-  const H   = stretto ? 310 : 440;
-  const MIN = stretto ? 48  : 58;
-  let tagliate = 0;
+  // Il bonus del cuneo è una somma esente: si aggiunge al netto senza
+  // far parte della RAL. Resta perciò fuori dalla barra, altrimenti le
+  // quote sommerebbero a più del 100%, e compare come riga additiva.
+  if(conBonus) voci.push({c:'var(--net-2)', t:'Bonus cuneo fiscale',
+    s:'somma esente · ' + r.cuneo.al + ' del reddito, si aggiunge al netto',
+    v:r.bonusEsente, segno:'+', extra:true});
 
-  document.getElementById('stack').innerHTML = voci.map(function(v){
-    const share = v.v / r.ral;
-    const naturale = share * H;
-    const floor = naturale < MIN;
-    if(floor && !v.net) tagliate++;
-    return '<div class="band' + (v.net ? ' net' : '') + (floor ? ' floor' : '')
-      + '" style="background:' + v.c + ';height:' + Math.max(MIN, naturale).toFixed(0) + 'px">'
-      + '<span class="l"><span class="t">' + v.t + '</span>'
-      + (v.s ? '<span class="s">' + v.s + '</span>' : '') + '</span>'
-      + '<span class="r"><span class="a">' + (v.net ? '' : '−') + eur(v.v) + '</span>'
-      + '<span class="pc">' + pc(share) + '</span></span></div>';
+  // barra: porta la proporzione. flex-grow proporzionale alla quota,
+  // così i segmenti si adattano alla larghezza senza calcoli di pixel.
+  document.getElementById('compbar').innerHTML = voci.map(function(v){
+    const q = v.v / base;
+    return (q > 0 && !v.extra)
+      ? '<i style="background:' + v.c + ';flex:' + q.toFixed(5) + ' 1 0"></i>' : '';
   }).join('');
 
-  document.getElementById('capNota').textContent = tagliate > 0
-    ? 'Altezza proporzionale; le bande marcate a sinistra sono al minimo leggibile'
-    : 'Altezza proporzionale alla quota di RAL';
+  // righe: portano i numeri, ad altezza uniforme.
+  document.getElementById('stack').innerHTML = voci.map(function(v){
+    return '<div class="band' + (v.net ? ' net' : '') + '" style="background:' + v.c + '">'
+      + '<span class="l"><span class="t">' + v.t + '</span>'
+      + (v.s ? '<span class="s">' + v.s + '</span>' : '') + '</span>'
+      + '<span class="r"><span class="a">' + (v.net ? '' : (v.segno || '−')) + eur(v.v) + '</span>'
+      + '<span class="pc">' + (v.segno === '+' ? '+' : '') + pc(v.v / base)
+      + ' della RAL</span></span></div>';
+  }).join('');
+
   document.getElementById('capRal').textContent = 'RAL ' + eur(r.ral) + ' = 100%';
 
   /* ── dettaglio ── */
@@ -935,15 +987,16 @@ $('imp').addEventListener('change', () => {
 });
 ['impFigli','prev'].forEach(id => $(id).addEventListener('input', seVisibile));
 
-// le altezze delle bande dipendono dalla larghezza: ridisegna al resize
-// e alla rotazione del telefono.
-let resizeId;
-addEventListener('resize', () => {
-  clearTimeout(resizeId);
-  resizeId = setTimeout(seVisibile, 180);
+// le altezze non dipendono più dalla larghezza, ma il pulsante mantiene
+// un compito anche dopo il primo calcolo: su schermi stretti il risultato
+// sta sotto il modulo, quindi lo porta in vista.
+$('go').addEventListener('click', () => {
+  const primo = !visibile();
+  esegui();
+  if(!primo && visibile() && window.innerWidth < 1000){
+    document.getElementById('out').scrollIntoView({behavior:'smooth', block:'start'});
+  }
 });
-
-$('go').addEventListener('click', esegui);
 </script>
 </body>
 </html>
