@@ -165,45 +165,6 @@
   @media (hover:hover){ .seg button:hover{background:var(--bg)} }
   .seg button[aria-pressed=true]{background:var(--ink);color:#fff}
 
-  .adv{border-top:1px solid var(--ink-09)}
-  .adv > summary{
-    padding:15px clamp(20px,4vw,30px);cursor:pointer;list-style:none;
-    font-family:'IBM Plex Mono',monospace;font-size:10px;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--ink-72);
-    display:flex;justify-content:space-between;align-items:center;gap:12px;
-    min-height:50px;
-  }
-  .adv > summary::-webkit-details-marker{display:none}
-  .adv > summary .chev{color:var(--net);font-size:15px}
-  .adv[open] > summary .chev{transform:rotate(45deg);display:inline-block}
-  .adv-note{padding:0 clamp(20px,4vw,30px) 4px;font-size:13px;color:var(--ink-48)}
-  .adv-body{padding:14px clamp(20px,4vw,30px) 24px;display:grid;gap:22px}
-  .check{display:flex;gap:11px;align-items:flex-start;cursor:pointer;
-    padding:4px 0;min-height:34px}
-  .check input{
-    appearance:none;-webkit-appearance:none;
-    width:20px;height:20px;flex:0 0 20px;margin-top:2px;
-    border:1.5px solid var(--ink-18);border-radius:3px;
-    background:var(--surface);cursor:pointer;position:relative;
-  }
-  .check input:checked{background:var(--net);border-color:var(--net)}
-  .check input:checked::after{
-    content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;
-    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg);
-  }
-  .check .txt strong{display:block;font-weight:600;font-size:14px}
-  .check .txt span{font-size:13px;color:var(--ink-48);line-height:1.45}
-  .sub-opt{margin:12px 0 0 31px;display:none}
-  .sub-opt.on{display:block}
-  .num-in{
-    width:100%;font-family:'IBM Plex Mono',monospace;font-size:16px;
-    color:var(--ink);background:var(--bg);
-    border:1px solid var(--ink-18);border-radius:var(--r);
-    padding:12px 13px;-moz-appearance:textfield;
-  }
-  .num-in::-webkit-outer-spin-button,.num-in::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .hint{font-size:12px;color:var(--ink-48);margin-top:7px}
-
   .go{
     width:100%;font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 108;
     font-weight:700;font-size:17px;letter-spacing:-.01em;
@@ -429,40 +390,6 @@
       </div>
     </div>
 
-    <details class="adv">
-      <summary>Agevolazioni e versamenti volontari <span class="chev" aria-hidden="true">+</span></summary>
-      <p class="adv-note">Il caso standard non prevede agevolazioni. Queste opzioni restano spente salvo scelta esplicita, e portano il calcolo fuori dal caso base.</p>
-      <div class="adv-body">
-
-        <div>
-          <label class="check">
-            <input type="checkbox" id="imp">
-            <span class="txt">
-              <strong>Regime impatriati</strong>
-              <span>Solo il 50% del reddito da lavoro concorre all'imponibile, entro 600.000 € annui.</span>
-            </span>
-          </label>
-          <div class="sub-opt" id="impSub">
-            <label class="check">
-              <input type="checkbox" id="impFigli">
-              <span class="txt">
-                <strong>Con figlio minore</strong>
-                <span>La quota imponibile scende dal 50% al 40%.</span>
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <label class="lbl" for="prev">Previdenza complementare</label>
-          <input type="number" class="num-in" id="prev" value="0" min="0" max="50000" step="100"
-                 placeholder="0" inputmode="numeric">
-          <p class="hint">Versamento annuo al fondo pensione. Deducibile fino a 5.164,57 €: abbatte l'imponibile, ma esce comunque dalla busta paga.</p>
-        </div>
-
-      </div>
-    </details>
-
     <p class="err" id="err" role="alert"></p>
     <button class="go" id="go">Calcola il netto</button>
    </div>
@@ -534,15 +461,13 @@
         <li><b>Il CCNL non entra nel calcolo.</b> La fiscalità è identica per ogni dipendente; il contratto incide solo sul numero di mensilità, che è già un input.</li>
         <li><b>Il netto mensile è una media.</b> In busta paga la tredicesima è tassata in modo leggermente diverso, perché su di essa non si applicano le detrazioni mensili.</li>
         <li><b>TFR escluso</b>: matura come accantonamento e non transita dal netto. Esclusi anche welfare e fringe benefit.</li>
-        <li><b>Le due agevolazioni sono opzionali e spente per default.</b> Sul plafond di previdenza complementare si assume che sia consumato dal solo versamento del lavoratore, ignorando TFR conferito e quota datoriale.</li>
+        <li><b>Nessuna agevolazione.</b> Il calcolo copre il caso standard indicato dalla traccia: niente regime impatriati, previdenza complementare, welfare o fringe benefit.</li>
       </ul>
     </div>
     <p class="src">
-      Scaglioni IRPEF — art. 11 TUIR, come modificato dalla L. 199/2025<br>
-      Detrazioni lavoro dipendente — art. 13 TUIR, D.Lgs. 216/2023<br>
-      Cuneo fiscale — L. 207/2024 art. 1 commi 4 e 6, reso strutturale dalla L. 199/2025<br>
-      Regime impatriati — art. 5 D.Lgs. 209/2023, modificato dalla L. 132/2025<br>
-      Previdenza complementare — art. 8 D.Lgs. 252/2005<br>
+      Scaglioni IRPEF — art. 11 TUIR (DPR 917/1986)<br>
+      Detrazioni da lavoro dipendente — art. 13 TUIR, come modificato dal D.Lgs. 216/2023<br>
+      Taglio del cuneo fiscale — L. 207/2024, art. 1 commi 4-9<br>
       Aliquote contributive — <a href="https://www.inps.it">INPS</a>, Fondo Pensioni Lavoratori Dipendenti<br>
       Addizionale regionale — <a href="https://www.regione.lombardia.it">Regione Lombardia</a>, art. 72 L.R. 10/2003<br>
       Addizionale comunale — <a href="https://www.comune.milano.it">Comune di Milano</a>, delibera C.C. 36/2013
@@ -578,12 +503,6 @@ const P = {
   // Addizionale comunale Milano. L'esenzione non è una franchigia:
   // sopra soglia si paga sull'intero imponibile.
   COM: {al:.008, esenteFinoA:23000},
-
-  // Regime impatriati: quota di reddito che concorre all'imponibile.
-  IMPATRIATI: {quota:.50, quotaConFigli:.40, tetto:600000},
-
-  // Tetto di deducibilità del versamento a fondo pensione.
-  PREV_MAX: 5164.57,
 
   RAL_MAX: 1000000
 };
@@ -649,66 +568,41 @@ function cuneo(reddito){
   return {tipo:'nessuno', importo:0};
 }
 
-/**
- * Regime impatriati: solo una quota del reddito concorre
- * all'imponibile, entro il tetto di 600.000 €.
- */
-function abbattiImpatriati(reddito, conFigli){
-  const q = conFigli ? P.IMPATRIATI.quotaConFigli : P.IMPATRIATI.quota;
-  const agevolabile = Math.min(reddito, P.IMPATRIATI.tetto);
-  const eccedenza   = Math.max(0, reddito - P.IMPATRIATI.tetto);
-  return {imponibile: agevolabile*q + eccedenza, quota:q, esentato: agevolabile*(1-q)};
-}
-
 /** Motore principale: da RAL a netto. */
-function calcola(ral, anno, opt){
-  opt = opt || {};
+function calcola(ral, anno){
 
-  // 1. Contributi obbligatori a carico del lavoratore. Si calcolano
-  //    sempre sulla RAL piena: le agevolazioni fiscali non toccano
-  //    la base contributiva.
+  // 1. Contributi obbligatori a carico del lavoratore.
   const contributi = ral * P.INPS;
 
-  // 2. Versamento volontario a fondo pensione: deducibile entro il
-  //    tetto, ed esce comunque dalla busta paga.
-  const prevVersata = Math.max(0, opt.prev || 0);
-  const prevDeducib = Math.min(prevVersata, P.PREV_MAX);
+  // 2. L'imponibile fiscale è il lordo al netto dei contributi,
+  //    che sono deducibili.
+  const imponibile = ral - contributi;
 
-  // 3. Reddito complessivo prima di eventuali agevolazioni.
-  const redditoBase = Math.max(0, ral - contributi - prevDeducib);
-
-  // 4. Regime impatriati: abbatte la base imponibile.
-  const imp = opt.impatriati
-    ? abbattiImpatriati(redditoBase, opt.impFigli)
-    : {imponibile: redditoBase, quota:1, esentato:0};
-  const imponibile = imp.imponibile;
-
-  // 5. IRPEF lorda per scaglioni.
+  // 3. IRPEF lorda per scaglioni.
   const irpef = perScaglioni(imponibile, P.IRPEF[anno]);
 
-  // 6. Detrazioni: abbattono l'imposta, non il reddito.
+  // 4. Detrazioni: abbattono l'imposta, non il reddito.
   const detr = detrazioneLavoro(imponibile);
   const cun  = cuneo(imponibile);
   const detrCuneo   = cun.tipo === 'detrazione' ? cun.importo : 0;
   const bonusEsente = cun.tipo === 'bonus'      ? cun.importo : 0;
 
-  // 7. L'IRPEF netta non scende sotto zero: le detrazioni eccedenti
+  // 5. L'IRPEF netta non scende sotto zero: le detrazioni eccedenti
   //    si perdono, l'incapienza non genera rimborso in questo modello.
   const irpefNetta = Math.max(0, irpef.totale - detr.totale - detrCuneo);
 
-  // 8. Addizionali locali: sull'imponibile, non sull'IRPEF,
+  // 6. Addizionali locali: sull'imponibile, non sull'IRPEF,
   //    e non risentono delle detrazioni.
   const reg = perScaglioni(imponibile, P.REG);
   const com = imponibile > P.COM.esenteFinoA ? imponibile * P.COM.al : 0;
 
-  // 9. Netto.
+  // 7. Netto.
   const imposte    = irpefNetta + reg.totale + com;
-  const trattenute = contributi + prevVersata + imposte;
+  const trattenute = contributi + imposte;
   const netto      = ral - trattenute + bonusEsente;
 
   return {
-    ral, anno, contributi, prevVersata, prevDeducib,
-    redditoBase, imponibile, impatriati: opt.impatriati ? imp : null,
+    ral, anno, contributi, imponibile,
     irpefLorda: irpef.totale, irpefRighe: irpef.righe,
     detr, cuneo: cun, detrCuneo, bonusEsente, irpefNetta,
     reg: reg.totale, regRighe: reg.righe, com,
@@ -794,9 +688,6 @@ function render(r, mensilita){
      s: r.com > 0 ? 'Milano · ' + pc2(P.COM.al)
                   : 'Milano · esente sotto ' + eur(P.COM.esenteFinoA), v:r.com}
   ];
-  if(r.prevVersata > 0) voci.push({c:'var(--d5)', t:'Previdenza complementare',
-    s:'versamento volontario al fondo pensione', v:r.prevVersata});
-
   const conBonus = r.bonusEsente > 0;
   voci.push({c:'var(--net)', t: conBonus ? 'Netto da retribuzione' : 'Netto annuale',
     s: conBonus ? 'la RAL dopo tutte le trattenute' : '',
@@ -842,30 +733,12 @@ function render(r, mensilita){
   if(r.detrCuneo)  rowsDetr += '<tr><td>Ulteriore detrazione da cuneo fiscale</td><td>' + eur2(r.detrCuneo) + '</td></tr>';
   rowsDetr += '<tr class="tot"><td>Totale detrazioni</td><td>' + eur2(r.detr.totale + r.detrCuneo) + '</td></tr>';
 
-  const bloccoImp = r.impatriati
-    ? '<h3>Regime impatriati</h3><table>'
-      + '<tr><td>Reddito prima dell\'agevolazione</td><td>' + eur2(r.redditoBase) + '</td></tr>'
-      + '<tr class="neg"><td>Quota esclusa da imposizione, ' + pc(1 - r.impatriati.quota)
-      + '</td><td>−' + eur2(r.impatriati.esentato) + '</td></tr>'
-      + '<tr class="tot"><td>Reddito imponibile agevolato</td><td>' + eur2(r.imponibile) + '</td></tr></table>'
-    : '';
-
-  const rigaPrev = r.prevVersata > 0
-    ? '<tr class="neg"><td>Previdenza complementare, dedotta'
-      + (r.prevVersata > r.prevDeducib
-          ? ' (' + eur2(r.prevVersata - r.prevDeducib) + ' oltre il tetto, non deducibile)' : '')
-      + '</td><td>−' + eur2(r.prevDeducib) + '</td></tr>'
-    : '';
-
   document.getElementById('detail').innerHTML =
     '<h3>Base imponibile</h3><table>'
     + '<tr><td>Retribuzione annua lorda</td><td>' + eur2(r.ral) + '</td></tr>'
     + '<tr class="neg"><td>Contributi INPS a carico del lavoratore, ' + pc2(P.INPS)
     + '</td><td>−' + eur2(r.contributi) + '</td></tr>'
-    + rigaPrev
-    + '<tr class="tot"><td>Reddito complessivo</td><td>' + eur2(r.redditoBase) + '</td></tr></table>'
-
-    + bloccoImp
+    + '<tr class="tot"><td>Imponibile fiscale</td><td>' + eur2(r.imponibile) + '</td></tr></table>'
 
     + '<h3>IRPEF lorda per scaglioni — ' + r.anno + '</h3><table>' + rowsIrpef
     + '<tr class="tot"><td>Imposta lorda</td><td>' + eur2(r.irpefLorda) + '</td></tr></table>'
@@ -887,7 +760,6 @@ function render(r, mensilita){
     + '<h3>Dal lordo al netto</h3><table>'
     + '<tr><td>Retribuzione annua lorda</td><td>' + eur2(r.ral) + '</td></tr>'
     + '<tr class="neg"><td>Contributi INPS</td><td>−' + eur2(r.contributi) + '</td></tr>'
-    + (r.prevVersata > 0 ? '<tr class="neg"><td>Previdenza complementare</td><td>−' + eur2(r.prevVersata) + '</td></tr>' : '')
     + '<tr class="neg"><td>IRPEF netta</td><td>−' + eur2(r.irpefNetta) + '</td></tr>'
     + '<tr class="neg"><td>Addizionale regionale</td><td>−' + eur2(r.reg) + '</td></tr>'
     + '<tr class="neg"><td>Addizionale comunale</td><td>−' + eur2(r.com) + '</td></tr>'
@@ -944,14 +816,7 @@ function esegui(){
   }
   mostraErrore(null);
   sincronizzaSlider(v);
-  render(
-    calcola(v, valSeg('segAnno'), {
-      impatriati: $('imp').checked,
-      impFigli:   $('impFigli').checked,
-      prev:       Math.max(0, Number($('prev').value) || 0)
-    }),
-    Number(valSeg('segMens'))
-  );
+  render(calcola(v, valSeg('segAnno')), Number(valSeg('segMens')));
 }
 
 /* Dopo il primo calcolo ogni modifica aggiorna subito il risultato:
@@ -986,13 +851,6 @@ $('ral').addEventListener('input', () => {
 $('ral').addEventListener('keydown', e => {
   if(e.key === 'Enter'){ e.preventDefault(); $('ral').blur(); esegui(); }
 });
-
-$('imp').addEventListener('change', () => {
-  $('impSub').classList.toggle('on', $('imp').checked);
-  if(!$('imp').checked) $('impFigli').checked = false;
-  seVisibile();
-});
-['impFigli','prev'].forEach(id => $(id).addEventListener('input', seVisibile));
 
 // le altezze non dipendono più dalla larghezza, ma il pulsante mantiene
 // un compito anche dopo il primo calcolo: su schermi stretti il risultato
