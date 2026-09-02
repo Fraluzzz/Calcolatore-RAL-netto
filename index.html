@@ -148,9 +148,6 @@
   }
   .ticks{display:flex;justify-content:space-between;
     font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-48);margin-top:2px}
-  .oltre{display:none;margin-top:8px;
-    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-48)}
-  .oltre.on{display:block}
 
   .seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px}
   .seg{display:flex;border:1px solid var(--ink-18);border-radius:var(--r);overflow:hidden}
@@ -358,17 +355,16 @@
       <label class="lbl" for="ral">Retribuzione annua lorda</label>
       <div class="ral-box">
         <span class="cur" aria-hidden="true">€</span>
-        <input type="number" id="ral" value="35000" min="1" max="1000000" step="500"
+        <input type="number" id="ral" value="35000" min="10000" max="200000" step="500"
                inputmode="numeric" enterkeyhint="done" aria-describedby="err">
       </div>
 
       <div class="slider-wrap">
-        <input type="range" id="slider" min="10000" max="150000" step="500" value="35000"
+        <input type="range" id="slider" min="10000" max="200000" step="500" value="35000"
                aria-label="Regola la retribuzione annua lorda">
         <div class="ticks" aria-hidden="true">
-          <span>10k</span><span>50k</span><span>100k</span><span>150k</span>
+          <span>10k</span><span>60k</span><span>130k</span><span>200k</span>
         </div>
-        <p class="oltre" id="oltre">Valore oltre la scala del cursore: il calcolo usa comunque la cifra digitata.</p>
       </div>
 
       <div class="seg-grid">
@@ -505,7 +501,15 @@ const P = {
   // sopra soglia si paga sull'intero imponibile.
   COM: {al:.008, esenteFinoA:23000},
 
-  RAL_MAX: 1000000
+  // Intervallo di validità del modello.
+  // Il minimo corrisponde all'ipotesi di lavoro full time per l'intero
+  // anno: sotto i 10.000 € di lordo si tratta necessariamente di part
+  // time o di anno parziale, entrambi fuori dal caso considerato.
+  // Il massimo è la soglia oltre la quale il calcolo smetterebbe di
+  // essere corretto, perché non è implementata la sterilizzazione del
+  // beneficio dell'aliquota al 33% (art. 1 commi 3 e 4, L. 199/2025).
+  RAL_MIN: 10000,
+  RAL_MAX: 200000
 };
 
 
@@ -788,8 +792,10 @@ function leggiRal(){
   if(grezzo === '')       return {err:'Inserisci una retribuzione annua lorda.'};
   const v = Number(grezzo);
   if(!Number.isFinite(v)) return {err:'Il valore inserito non è un numero.'};
-  if(v <= 0)              return {err:'La RAL deve essere maggiore di zero.'};
-  if(v > P.RAL_MAX)       return {err:'Valore massimo accettato: ' + eur(P.RAL_MAX) + '.'};
+  if(v < P.RAL_MIN)       return {err:'Valore minimo ' + eur(P.RAL_MIN)
+    + ': sotto questa soglia il rapporto non è full time per l\'intero anno.'};
+  if(v > P.RAL_MAX)       return {err:'Valore massimo ' + eur(P.RAL_MAX)
+    + ': oltre questa soglia il modello non applica la sterilizzazione prevista per i redditi elevati.'};
   return {v};
 }
 
@@ -800,11 +806,10 @@ function mostraErrore(msg){
   $('ral').setAttribute('aria-invalid', msg ? 'true' : 'false');
 }
 
-/** Allinea il cursore al campo, segnalando quando il valore lo eccede. */
+/** Allinea il cursore al campo. Campo e cursore condividono lo stesso
+    intervallo, quindi un valore valido è sempre rappresentabile. */
 function sincronizzaSlider(v){
-  const min = Number($('slider').min), max = Number($('slider').max);
-  $('slider').value = Math.min(max, Math.max(min, v));
-  $('oltre').classList.toggle('on', v > max || v < min);
+  $('slider').value = v;
 }
 
 function esegui(){
@@ -838,7 +843,6 @@ const seVisibile = () => { if(visibile()) esegui(); };
 
 $('slider').addEventListener('input', () => {
   $('ral').value = $('slider').value;
-  $('oltre').classList.remove('on');
   seVisibile();
 });
 
